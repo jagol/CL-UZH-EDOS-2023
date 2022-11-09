@@ -4,6 +4,8 @@ import json
 import os
 from typing import Dict, Any
 
+from mappings import VECTOR_TO_CAT_MAPPING
+
 
 def load_preds(fpath: str) -> Dict[str, Any]:
     items = []
