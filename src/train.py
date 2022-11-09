@@ -11,7 +11,8 @@ import sklearn
 import torch
 from transformers import (
     AutoModelForSequenceClassification,
-    TrainingArguments, Trainer, AutoTokenizer,
+    TrainingArguments, Trainer, AutoTokenizer, 
+    EarlyStoppingCallback
 )
 import wandb
 
@@ -20,7 +21,7 @@ from get_loggers import get_logger
 
 
 # transformers.logging.set_verbosity_info()
-train_logger = None
+train_logger = get_logger('train')
 NLI: bool = False
 eval_set: Optional[Dataset] = None
 num_comp_metrics_out = 0
@@ -114,7 +115,8 @@ def search_hyperparams(train_set: Dataset, dev_set: Dataset, model_init,
         args=training_args,
         train_dataset=train_set,
         eval_dataset=dev_set,
-        compute_metrics=compute_metrics
+        compute_metrics=compute_metrics,
+        callbacks = [EarlyStoppingCallback(early_stopping_patience=args.patience)]
     )
     train_logger.info('Start hyperparameter search.')
     best_run = trainer.hyperparameter_search(
@@ -132,7 +134,7 @@ def compute_metrics(eval_pred) -> Dict[str, float]:
     if isinstance(logits, tuple):
         logits = logits[0]
 
-    if NLI or len(set(labels.flatten().tolist())) <= 2:
+    if NLI or max(set(labels.flatten().tolist())) <= 1:
         return compute_binary_metrics(logits, labels)
     else:
         return compute_multi_class_metrics(logits, labels)
@@ -216,8 +218,7 @@ def main(args: argparse.Namespace) -> None:
             raise Exception(f'Creation of directory "{path}" failed.')
     if len(os.listdir(path)) > 0:
         raise Exception(f"Output directory '{path}' is not empty.")
-
-    train_logger = get_logger('train')
+        
     train_logger.info('Cmd args: ')
     for k, v in args.__dict__.items():
         train_logger.info(f'"{k}": "{v}"')
@@ -292,6 +293,7 @@ if __name__ == '__main__':
     # hyperparams
     parser.add_argument('-E', '--epochs', type=float, default=5.0,
                         help='Number of epochs for fine-tuning.')
+    parser.add_argument('--patience', type=int, help='Patience for early stopping.')
     parser.add_argument('-b', '--batch_size', type=int, default=1,
                         help='Batch-size to be used. Can only be set for training, '
                              'not for inference.')

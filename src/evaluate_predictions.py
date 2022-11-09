@@ -22,8 +22,8 @@ def to_int(value: float, threshold: float) -> int:
     return 0
 
 
-def get_true_labels(items: Union[List[item_type], Dataset], threshold: float) -> List[int]:
-    return [to_int(item['label_value'], threshold=threshold) for item in items]
+def get_true_labels(items: Union[List[item_type], Dataset], label_key: str, threshold: float) -> List[int]:
+    return [to_int(item[label_key], threshold=threshold) for item in items]
 
 
 def get_predictions(items: Union[List[item_type], Dataset], threshold: Optional[float], 
@@ -54,12 +54,12 @@ def get_items_for_func(items: Union[List[item_type], Dataset], func: str) -> Lis
     return items_for_func
 
 
-def compute_metrics_hatecheck(preds_labels: List[item_type], threshold: float) -> Dict[str, Dict[str, float]]:
+def compute_metrics_hatecheck(preds_labels: List[item_type], label_key: str, threshold: float) -> Dict[str, Dict[str, float]]:
     """Compute metrics function for hatecheck.
 
     Computes evaluation scores for each hatecheck functionality and the overall scores.
     """
-    true_labels = get_true_labels(preds_labels, threshold=threshold)
+    true_labels = get_true_labels(preds_labels, label_key=label_key, threshold=threshold)
     pred_labels, pred_probs = get_predictions(preds_labels, threshold=threshold)
 
     # compute eval scores overall
@@ -77,7 +77,7 @@ def compute_metrics_hatecheck(preds_labels: List[item_type], threshold: float) -
     # compute functionality-wise scores
     for func in functionalities:
         items_for_func = get_items_for_func(preds_labels, func)
-        true_labels_for_func = get_true_labels(items_for_func, threshold=threshold)
+        true_labels_for_func = get_true_labels(items_for_func, label_key=label_key, threshold=threshold)
         pred_labels_for_func, pred_probs_for_func = get_predictions(items_for_func, threshold=threshold)
         assert len(true_labels_for_func) == len(pred_labels_for_func)
         results[func] = {
@@ -96,10 +96,10 @@ def compute_metrics_hatecheck(preds_labels: List[item_type], threshold: float) -
     return results
 
 
-def compute_metrics_default(preds_labels: List[item_type], threshold: float, pred_key: str
+def compute_metrics_default(preds_labels: List[item_type], label_key: str, threshold: float, pred_key: str
         ) -> Dict[str, float]:
     """Compute metrics for all datasets except for hatecheck."""
-    true_labels = get_true_labels(preds_labels, threshold=threshold)
+    true_labels = get_true_labels(preds_labels, label_key=label_key, threshold=threshold)
     pred_labels, pred_probs = get_predictions(preds_labels, threshold=threshold, pred_key=pred_key)
 
     true_class_freqs = {dlabel: true_labels.count(dlabel) for dlabel in set(true_labels)}
@@ -157,12 +157,13 @@ def main(args: argparse.Namespace) -> None:
 
     if args.evalset_name == 'MHC':
         eval_logger.info('Use method: compute_metrics_hatecheck')
-        metrics = compute_metrics_hatecheck(preds_labels, threshold=args.threshold)
+        metrics = compute_metrics_hatecheck(preds_labels, threshold=args.threshold, label_key=args.label_key)
         for metric, val in metrics['overall'].items():
             eval_logger.info(f'{metric}: {val}')
     else:
         eval_logger.info('Use method: compute_metrics_default')
-        metrics = compute_metrics_default(preds_labels, threshold=args.threshold, pred_key=args.pred_key)
+        metrics = compute_metrics_default(preds_labels, threshold=args.threshold, pred_key=args.pred_key, 
+                                          label_key=args.label_key)
         for metric, val in metrics.items():
             eval_logger.info(f'{metric}: {val}')
 
@@ -200,4 +201,6 @@ if __name__ == '__main__':
     parser.add_argument('-k', '--pred_key', 
         help='Key that points to the prediction that should be evaluated.')
     cmd_args = parser.parse_args()
+    parser.add_argument('-l', '--label_key', 
+                        help='Key that points to the label for the evaluation.')
     main(cmd_args)

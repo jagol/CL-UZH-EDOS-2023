@@ -1,4 +1,6 @@
 import argparse
+import csv
+import json
 import os
 from typing import Any, Dict, List
 
@@ -73,6 +75,7 @@ def construct_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
                         'limit_validation_set': None,
                         # hyperparams
                         'epochs': 10,
+                        'patience': 2,
                         'batch_size': 2,
                         'gradient_accumulation': 16,
                         'learning_rate': 1e-5,
@@ -107,16 +110,17 @@ def construct_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     },
                     # map and evaluate on interal devset
                     'map_multiclass_to_binary_preds_internal_dev': {
-                        'path': os.path.join(path_base_outdir, 'predictions', 'EDOS2023TaskA_dev_preprocessed.jsonl'),
+                        'path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed.jsonl'),
                         'input_key': 'class_probs',
                         'output_key': 'prediction_int_binary'
                     },
                     'evaluate_predictions': {
-                        'path_predictions': os.path.join(path_base_outdir, 'predictions', 'EDOS2023TaskA_dev_preprocessed.jsonl'),
-                        'evalset_name': 'EDOS2023TaskA',
-                        'out_path': os.path.join(path_base_outdir, 'predictions', 'EDOS2023TaskA_dev_preprocessed_metrics.json'),
+                        'path_predictions': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed.jsonl'),
+                        'evalset_name': f'EDOS2023{task}',
+                        'out_path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed_metrics.json'),
                         'threshold': 0.5,
                         'pred_key': 'prediction_int_binary',
+                        'label_key': 'label_value_binary',
                         'write_false_preds': True
                     },
                     # map official devset and generate submission file
@@ -135,7 +139,14 @@ def construct_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
     return configs
 
 
-def exec_run(config: argparse.Namespace) -> None:
+def add_evaluation_to_summary(config: Dict[str, Any], writer: csv.DictWriter) -> None:
+    with open(config['evaluate_predictions']['out_path']) as fin:
+        metrics = json.load(fin)
+        f1_macro = metrics['f1-macro']
+        run_name = config['train']['run_name']
+        writer.writerow({'f1_macro': f1_macro, 'run_name': run_name})
+
+def exec_run(config: argparse.Namespace, csv_writer: csv.DictWriter) -> None:
     # training
     RUN_LOGGER.info('Start training.')
     train.main(argparse.Namespace(**config['train']))
@@ -157,6 +168,8 @@ def exec_run(config: argparse.Namespace) -> None:
     RUN_LOGGER.info('Evaluate predictions on internal dev set.')
     evaluate_predictions.main(argparse.Namespace(**config['evaluate_predictions']))
     RUN_LOGGER.info('Finished evaluation of predictions on internal dev set.')
+    RUN_LOGGER.info('Add evaluation to summary.')
+    add_evaluation_to_summary(config, csv_writer)
     
     # official dev-set
     if config['map_multiclass_to_binary_preds_official_dev']:
@@ -171,14 +184,18 @@ def exec_run(config: argparse.Namespace) -> None:
 def main(args: argparse.Namespace) -> None:
     list_of_run_configs = construct_configs(args)
     num_runs = len(list_of_run_configs)
-    for i, config in enumerate(list_of_run_configs, start=1):
-        RUN_LOGGER.info(f'Start run [{i}/{num_runs}].')
-        exec_run(config)
-        RUN_LOGGER.info(f'Finished run [{i}/{num_runs}].')
-        if args.max_runs:
-            if i >= args.max_runs:
-                RUN_LOGGER.info('Reached maximum number of runs ({i}). Stopping.')
-                break
+    with open(os.path.join(args.output_dir, EXPERIMENT_NAME, 'dev_results_summary.csv'), 'w') as fout:
+        fieldnames = ['run_name', 'f1_macro']
+        writer = csv.DictWriter(fout, fieldnames=fieldnames)
+        writer.writeheader()
+        for i, config in enumerate(list_of_run_configs, start=1):
+            RUN_LOGGER.info(f'Start run [{i}/{num_runs}].')
+            exec_run(config, writer)
+            RUN_LOGGER.info(f'Finished run [{i}/{num_runs}].')
+            if args.max_runs:
+                if i >= args.max_runs:
+                    RUN_LOGGER.info('Reached maximum number of runs ({i}). Stopping.')
+                    break
 
 
 if __name__ == '__main__':
