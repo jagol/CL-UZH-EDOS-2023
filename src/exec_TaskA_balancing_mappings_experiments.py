@@ -44,8 +44,8 @@ def construct_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
             fname_dev_train_task = f'EDOS2023{task}_dev_preprocessed.jsonl'
             valset_path_train_task = os.path.join(args.data_dir, f'EDOS2023{task}', fname_dev_train_task)
 
-            fname_dev_target_task = f'EDOS2023{task}_dev_preprocessed.jsonl'
-            valset_path_target_task = os.path.join(args.data_dir, f'EDOS2023{task}', fname_dev_target_task)
+            fname_dev_target_task = f'EDOS2023TaskA_dev_preprocessed.jsonl'
+            valset_path_target_task = os.path.join(args.data_dir, f'EDOS2023TaskA', fname_dev_target_task)
 
             fname_dev_official = 'dev_task_a_entries.csv'
             valset_path_official = os.path.join(args.data_dir, f'EDOS2023TaskA', fname_dev_official)
@@ -110,14 +110,14 @@ def construct_configs(args: argparse.Namespace) -> List[Dict[str, Any]]:
                     },
                     # map and evaluate on interal devset
                     'map_multiclass_to_binary_preds_internal_dev': {
-                        'path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed.jsonl'),
+                        'path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023TaskA_dev_preprocessed.jsonl'),
                         'input_key': 'class_probs',
                         'output_key': 'prediction_int_binary'
                     },
                     'evaluate_predictions': {
-                        'path_predictions': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed.jsonl'),
-                        'evalset_name': f'EDOS2023{task}',
-                        'out_path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023{task}_dev_preprocessed_metrics.json'),
+                        'path_predictions': os.path.join(path_base_outdir, 'predictions', f'EDOS2023TaskA_dev_preprocessed.jsonl'),
+                        'evalset_name': f'EDOS2023TaskA',
+                        'out_path': os.path.join(path_base_outdir, 'predictions', f'EDOS2023TaskA_dev_preprocessed_metrics.json'),
                         'threshold': 0.5,
                         'pred_key': 'prediction_int_binary',
                         'label_key': 'label_value_binary',
