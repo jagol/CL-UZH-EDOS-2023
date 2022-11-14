@@ -71,6 +71,8 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         learning_rate=args.learning_rate,
         evaluation_strategy=args.evaluation_strategy,
         eval_steps=args.eval_steps,
+        load_best_model_at_end=True,
+        metric_for_best_model='eval_f1-macro',
         report_to="wandb" if args.wandb else None,
         no_cuda=args.no_cuda,
     )
@@ -81,7 +83,8 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         args=training_args,
         train_dataset=train_set,
         eval_dataset=dev_set,
-        compute_metrics=compute_metrics
+        compute_metrics=compute_metrics,
+        callbacks = [EarlyStoppingCallback(early_stopping_patience=args.patience)]
     )
     train_logger.info('Start training.')
     trainer.train()
