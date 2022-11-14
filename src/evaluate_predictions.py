@@ -200,7 +200,7 @@ if __name__ == '__main__':
         help='If true, create files that contain false positives and false negatives.')
     parser.add_argument('-k', '--pred_key', 
         help='Key that points to the prediction that should be evaluated.')
-    cmd_args = parser.parse_args()
     parser.add_argument('-l', '--label_key', 
                         help='Key that points to the label for the evaluation.')
+    cmd_args = parser.parse_args()
     main(cmd_args)

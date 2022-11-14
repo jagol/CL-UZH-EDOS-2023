@@ -39,6 +39,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--path', help='Path to input file in jsonl format.')
     parser.add_argument('-i', '--input_key', help='Key to read multiclass value from.')
-    parser.add_argument('-o', '--output_key', 'Key to write the binary value to.')
+    parser.add_argument('-o', '--output_key', help='Key to write the binary value to.')
     cmd_args = parser.parse_args()
     main(cmd_args)
