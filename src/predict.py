@@ -134,6 +134,7 @@ class TaskDescPredictor(Predictor):
         """
         encoded_input = Dataset.encode_item_with_task_descriptions(
             self._tokenizer, text=input_text, task_description=task_description)
+        del encoded_input['token_type_ids']
         logits = self._model(**encoded_input.to(self._device))[0]
         return self.logits_to_prob(logits)
 
@@ -236,7 +237,7 @@ def main(args) -> None:
                 else:
                     item['prediction'] = predictor.classify(input_text=item['text'], hypotheses=args.hypothesis)
             elif args.task_description:
-                item['prediction'] = predictor.classify(input_text=item['text'], task_description=item['label_type'])
+                item['prediction'] = predictor.classify(input_text=item['text'], task_description=item['label_desc'])
             else:
                 # do standard classification
                 if args.dataset_token:

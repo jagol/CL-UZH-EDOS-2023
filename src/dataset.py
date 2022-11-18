@@ -77,10 +77,10 @@ class Dataset(torch.utils.data.IterableDataset):
         for item in tqdm(self._items):
             if task_description and dataset_token:
                 enc = self.encode_item_with_task_descriptions_and_dataset_token(
-                    tokenizer, text=item['text'], source=item['source'], task_description=item['label_type'])
+                    tokenizer, text=item['text'], source=item['source'], task_description=item['label_desc'])
             elif task_description:
                 enc = self.encode_item_with_task_descriptions(
-                    tokenizer, text=item['text'], task_description=item['label_type'])
+                    tokenizer, text=item['text'], task_description=item['label_desc'])
             elif dataset_token and self._has_hypotheses():
                 enc = self.encode_item_with_dataset_token_and_hypotheses(
                     tokenizer, text=item['text'], source=item['source'], hypothesis=item['hypothesis'])
