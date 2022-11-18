@@ -21,7 +21,9 @@ from get_loggers import get_logger
 
 
 # transformers.logging.set_verbosity_info()
-train_logger = get_logger('train')
+train_logger = None
+if train_logger is None:
+    train_logger = get_logger('train')
 NLI: bool = False
 eval_set: Optional[Dataset] = None
 num_comp_metrics_out = 0
@@ -188,6 +190,8 @@ def ensure_valid_encoding(enc_dataset: Dataset) -> None:
 
 def main(args: argparse.Namespace) -> None:
     global train_logger
+    if train_logger is None:
+        train_logger = get_logger('train')
     global NLI
     global eval_set
     global main_args
@@ -296,7 +300,7 @@ if __name__ == '__main__':
     # hyperparams
     parser.add_argument('-E', '--epochs', type=float, default=5.0,
                         help='Number of epochs for fine-tuning.')
-    parser.add_argument('--patience', type=int, help='Patience for early stopping.')
+    parser.add_argument('--patience', type=int, default=2, help='Patience for early stopping.')
     parser.add_argument('-b', '--batch_size', type=int, default=1,
                         help='Batch-size to be used. Can only be set for training, '
                              'not for inference.')
