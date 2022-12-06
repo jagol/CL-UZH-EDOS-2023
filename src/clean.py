@@ -11,15 +11,20 @@ class Cleaner:
     lower_score_regex = re.compile(r'_')
     brackets_regex = re.compile(r'\[.*?\]')
     
-    def clean(self, text: str, processing_type: str, remove_brackets: bool = False, remove_emojis: bool = True) -> str:
+    def __init__(self, cleaning_type: str, remove_brackets: bool = False, remove_emojis: bool = True) -> None:
+        self.cleaning_type = cleaning_type
+        self.remove_brackets = remove_brackets
+        self.remove_emojis = remove_emojis
+    
+    def clean(self, text: str) -> str:
         ctext = re.sub(self.amp_regex, '&', text)  # sub wrong decoded &amp;
-        if remove_brackets:
+        if self.remove_brackets:
             ctext = re.sub(self.brackets_regex, '', ctext)  # remove stuff in brackets
-        if remove_emojis:
+        if self.remove_emojis:
             ctext = self._remove_emojis(ctext)
-        if processing_type == 'remove':
+        if self.cleaning_type == 'remove':
             ctext = self._remove(ctext)
-        elif processing_type == 'replace':
+        elif self.cleaning_type == 'replace':
             ctext = self._replace(ctext)
         ctext = re.sub(self.white_space_regex, ' ', ctext) # remove unnecessary white-space
         return ctext

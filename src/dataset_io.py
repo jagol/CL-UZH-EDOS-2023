@@ -62,9 +62,11 @@ class EDOSCSVWriter(Writer):
 
 
 LOADERS = {
-    'EDOSCSVLoader': EDOSCSVLoader
+    'EDOSCSVLoader': EDOSCSVLoader,
+    'JSONLLoader': JSONLLoader
 }
 
 WRITERS = {
-    'EDOSCSVWriter': EDOSCSVWriter
+    'EDOSCSVWriter': EDOSCSVWriter,
+    'JSONLWriter': JSONLWriter
 }
