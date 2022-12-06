@@ -70,7 +70,7 @@ def compute_corpus_stats(path: str) -> None:
             'per_corpus_label_counts': per_corpus_label_counts,
             'corpus_item_count': corpus_item_count,
         }, fout, ensure_ascii=False, indent=4)
-    stats_logger.info(f'Statistics of resulting dataset written to: {path_out}')
+    # stats_logger.info(f'Statistics of resulting dataset written to: {path_out}')
 
 
 def main(args: argparse.Namespace):

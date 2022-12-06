@@ -20,27 +20,27 @@ def load_configs(fpath: str) -> Dict[str, Any]:
 
 
 def main(args: argparse.Namespace) -> None:
-    PREPROPIPE_LOGGER.info()
+    PREPROPIPE_LOGGER.info('Load configs')
     split_configs = load_configs(args.path_split_configs)
     prepro_configs = load_configs(args.path_prepro_configs)
     merge_configs = load_configs(args.path_merge_configs)
     label_desc_configs = load_configs(args.path_label_desc_configs)
     
     PREPROPIPE_LOGGER.info('Split corpora')
-    for config_id, split_config in tqdm(split_configs.items()):
-        split.main(argparse.ArgumentParser(**split_config))
+    for split_config in tqdm(split_configs):
+        split.main(argparse.Namespace(**split_config))
     
     PREPROPIPE_LOGGER.info('Preprocess corpora')
-    for config_id, prepro_config in tqdm(prepro_configs.items()):
-        preprocess.main(argparse.ArgumentParser(**prepro_config))
+    for prepro_config in tqdm(prepro_configs):
+        preprocess.main(argparse.Namespace(**prepro_config))
     
     PREPROPIPE_LOGGER.info('Merge corpora')
-    for config_id, merge_config in tqdm(merge_configs.items()):
-        merge.main(argparse.ArgumentParser(**merge_config))
+    for merge_config in tqdm(merge_configs):
+        merge.main(argparse.Namespace(**merge_config))
     
     PREPROPIPE_LOGGER.info('Generate label description versions')
-    for config_id, label_desc_config in tqdm(label_desc_configs.items()):
-        to_label_desc_format.main(argparse.ArgumentParser(**label_desc_config))
+    for label_desc_config in tqdm(label_desc_configs):
+        to_label_desc_format.main(argparse.Namespace(**label_desc_config))
 
 
 if __name__ == '__main__':

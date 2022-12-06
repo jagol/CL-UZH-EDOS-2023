@@ -31,8 +31,7 @@ class JSONLLoader(Loader):
 class JSONLWriter(Writer):
     
     @staticmethod
-    def write(entries: List[Any], fpath: str) -> None:
-        entries = []
+    def write(entries: List[Dict[str, Any]], fpath: str) -> None:
         with open(fpath, 'w') as fout:
             for entry in entries:
                 fout.write(json.dumps(entry) + '\n')
@@ -53,10 +52,10 @@ class EDOSCSVLoader(Loader):
 class EDOSCSVWriter(Writer):
 
     @staticmethod
-    def write(entries: List[Dict[str, Any]], fpath: str, header: Optional[List[str]]) -> None:
+    def write(entries: List[Dict[str, Any]], fpath: str, header: List[str]) -> None:
         with open(fpath, 'w') as fout:
-            writer = csv.DictWriter(fout)
-            writer.writeheader(header)
+            writer = csv.DictWriter(fout, fieldnames=header)
+            writer.writeheader()
             for entry in entries:
                 writer.writerow(entry)
 

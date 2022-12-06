@@ -27,9 +27,9 @@ def main(args: argparse.Namespace) -> None:
     loader = LOADERS[args.loader]
     writer = WRITERS[args.writer]
     entries_in = loader.load(args.path_in)
-    entries_a, entries_b = split(entries_in=entries_in, num_a=args.num_a)
-    writer.write(entries_a, args.path_out_a)
-    writer.write(entries_b, args.path_out_b)
+    entries_a, entries_b = split(entries_in=entries_in, num_a=args.num_a, ratio=args.ratio)
+    writer.write(entries_a, args.path_out_a, header=list(entries_in[0].keys()))
+    writer.write(entries_b, args.path_out_b, header=list(entries_in[0].keys()))
 
 
 if __name__ == '__main__':
@@ -37,6 +37,8 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--path_in', help='Path to corpus that will be split.')
     parser.add_argument('-a', '--path_out_a', help='Output path for part-a of the produced split.')
     parser.add_argument('-b', '--path_out_b', help='Output path for part-b of the produced split.')
+    parser.add_argument('-n', '--num_a', type=int, help='Number of examples that go to split a.')
+    parser.add_argument('-r', '--ratio', type=float, help='Between 0 and 1. Amount of data that goes into part-a.')
     parser.add_argument('-l', '--loader', help='The dataset loader to use (in dataset_io).')
     parser.add_argument('-w', '--writer', help='The dataset writer to use (in dataset_io).')
     parser.add_argument('-r', '--random_seed', default=1, type=int, 
