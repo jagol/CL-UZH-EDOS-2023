@@ -1,10 +1,8 @@
 import argparse
 import json
-import logging
 import os
 import random
-from turtle import TurtleScreenBase
-from typing import Optional, Dict, List, Any, Tuple
+from typing import Optional, Dict, List, Any
 
 import numpy as np
 import sklearn
