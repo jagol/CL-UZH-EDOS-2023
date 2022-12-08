@@ -21,9 +21,9 @@ from get_loggers import get_logger
 
 
 # transformers.logging.set_verbosity_info()
-train_logger = None
-if train_logger is None:
-    train_logger = get_logger('train')
+TRAIN_LOGGER = None
+if TRAIN_LOGGER is None:
+    TRAIN_LOGGER = get_logger('train')
 NLI: bool = False
 eval_set: Optional[Dataset] = None
 num_comp_metrics_out = 0
@@ -57,7 +57,7 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
     # for batch in train_set:
     #     break
     # print({k: v.shape for k, v in batch.items()})
-    train_logger.info('Instantiate training args.')
+    TRAIN_LOGGER.info('Instantiate training args.')
     training_args = TrainingArguments(
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
@@ -78,7 +78,7 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         report_to="wandb" if args.wandb else None,
         no_cuda=args.no_cuda,
     )
-    train_logger.info('Instantiate trainer.')
+    TRAIN_LOGGER.info('Instantiate trainer.')
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
@@ -88,14 +88,14 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         compute_metrics=compute_metrics,
         callbacks = [EarlyStoppingCallback(early_stopping_patience=args.patience)]
     )
-    train_logger.info('Start training.')
+    TRAIN_LOGGER.info('Start training.')
     trainer.train()
-    train_logger.info('Finished training.')
+    TRAIN_LOGGER.info('Finished training.')
 
 
 def search_hyperparams(train_set: Dataset, dev_set: Dataset, model_init,
                        tokenizer: AutoTokenizer, args: argparse.Namespace) -> None:
-    train_logger.info('Instantiate training args.')
+    TRAIN_LOGGER.info('Instantiate training args.')
     training_args = TrainingArguments(
         num_train_epochs=args.epochs,
         per_device_train_batch_size=args.batch_size,
@@ -113,7 +113,7 @@ def search_hyperparams(train_set: Dataset, dev_set: Dataset, model_init,
         eval_steps=args.eval_steps,
         # report_to="wandb",
     )
-    train_logger.info('Instantiate trainer.')
+    TRAIN_LOGGER.info('Instantiate trainer.')
     trainer = Trainer(
         model_init=model_init,
         tokenizer=tokenizer,
@@ -123,13 +123,13 @@ def search_hyperparams(train_set: Dataset, dev_set: Dataset, model_init,
         compute_metrics=compute_metrics,
         callbacks = [EarlyStoppingCallback(early_stopping_patience=args.patience)]
     )
-    train_logger.info('Start hyperparameter search.')
+    TRAIN_LOGGER.info('Start hyperparameter search.')
     best_run = trainer.hyperparameter_search(
         direction="maximize",
         backend="ray",
         n_trials=3
     )
-    train_logger.info('Finished hyperparameter search.')
+    TRAIN_LOGGER.info('Finished hyperparameter search.')
     with open(os.path.join(args.path_out_dir, 'hyperparameter_search_results.json')) as fout:
         json.dump(best_run.__dict__, fout)
 
@@ -189,9 +189,9 @@ def ensure_valid_encoding(enc_dataset: Dataset) -> None:
 
 
 def main(args: argparse.Namespace) -> None:
-    global train_logger
-    if train_logger is None:
-        train_logger = get_logger('train')
+    global TRAIN_LOGGER
+    if TRAIN_LOGGER is None:
+        TRAIN_LOGGER = get_logger('train')
     global NLI
     global eval_set
     global main_args
@@ -228,13 +228,13 @@ def main(args: argparse.Namespace) -> None:
     if len(os.listdir(path)) > 0:
         raise Exception(f"Output directory '{path}' is not empty.")
         
-    train_logger.info('Cmd args: ')
+    TRAIN_LOGGER.info('Cmd args: ')
     for k, v in args.__dict__.items():
-        train_logger.info(f'"{k}": "{v}"')
-    train_logger.info(f'Load tokenizer: {args.model_name}')
+        TRAIN_LOGGER.info(f'"{k}": "{v}"')
+    TRAIN_LOGGER.info(f'Load tokenizer: {args.model_name}')
     tokenizer = AutoTokenizer.from_pretrained(args.model_name)
 
-    train_logger.info(f'Load trainset from: {args.training_set}')
+    TRAIN_LOGGER.info(f'Load trainset from: {args.training_set}')
     train_set = Dataset(name='trainset', path_to_dataset=args.training_set)
     train_set.load(load_limit=args.limit_training_set)
     if args.nli:
@@ -243,7 +243,7 @@ def main(args: argparse.Namespace) -> None:
                              task_description=args.task_description)
     ensure_valid_encoding(train_set)
 
-    train_logger.info(f'Load trainset from: {args.validation_set}')
+    TRAIN_LOGGER.info(f'Load trainset from: {args.validation_set}')
     eval_set = Dataset(name='eval_set', path_to_dataset=args.validation_set)
     eval_set.load(load_limit=args.limit_validation_set)
     if args.nli:
@@ -252,20 +252,20 @@ def main(args: argparse.Namespace) -> None:
                             task_description=args.task_description)
 
     model_to_load = args.checkpoint if args.checkpoint else args.model_name
-    train_logger.info(f'Load Model from: {model_to_load}')
+    TRAIN_LOGGER.info(f'Load Model from: {model_to_load}')
 
     if args.search_hyperparams:
-        train_logger.info(f'Start hyperparameter search with {model_to_load} and num output labels = 2.')
+        TRAIN_LOGGER.info(f'Start hyperparameter search with {model_to_load} and num output labels = 2.')
 
         def model_init():
             return AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=2, return_dict=True)
         search_hyperparams(train_set, eval_set, model_init, tokenizer, args)
     else:
         if args.nli:
-            train_logger.info(f'Set output layer to dimensionality to {3}')
+            TRAIN_LOGGER.info(f'Set output layer to dimensionality to {3}')
             model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=3)
         else:
-            train_logger.info(f'Set output layer to dimensionality: {args.num_labels}')
+            TRAIN_LOGGER.info(f'Set output layer to dimensionality: {args.num_labels}')
             model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels)
         train(train_set, eval_set, model, tokenizer, args)
 
@@ -334,7 +334,7 @@ if __name__ == '__main__':
                         help='Seed for torch, numpy and random. Set for reproducibility.')
     parser.add_argument('--wandb', type=bool, default=True)
     cmd_args = parser.parse_args()
-    train_logger: Optional[logging.Logger] = None
+    TRAIN_LOGGER: Optional[logging.Logger] = None
     if not cmd_args.wandb:
         # logger = logging.getLogger('wandb')
         # logger.setLevel(logging.WARNING)
