@@ -334,7 +334,7 @@ if __name__ == '__main__':
                         help='Seed for torch, numpy and random. Set for reproducibility.')
     parser.add_argument('--wandb', type=bool, default=True)
     cmd_args = parser.parse_args()
-    TRAIN_LOGGER: Optional[logging.Logger] = None
+    # TRAIN_LOGGER: Optional[logging.Logger] = None
     if not cmd_args.wandb:
         # logger = logging.getLogger('wandb')
         # logger.setLevel(logging.WARNING)
