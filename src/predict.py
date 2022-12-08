@@ -247,7 +247,7 @@ def main(args) -> None:
                 # item['prediction_int'] = item['class_probs'].index(max(item['class_probs']))
             fout.write(json.dumps(item, ensure_ascii=False) + '\n')
         fout.close()
-    pred_logger.info('Finished prediction.')
+    pred_logger.info('Finished prediction.')    
 
 
 if __name__ == '__main__':

@@ -207,8 +207,10 @@ def main(args: argparse.Namespace) -> None:
             project_name = 'EDOS2023TaskB'
         elif 'TaskC' in args.validation_set:
             project_name = 'EDOS2023TaskC'
+        elif 'EDOS2023' in args.validation_set:
+            project_name = 'EDOS2023'
         else:
-            raise Exception('Validation set "{args.validation_set}" does not point to an EDOS-subtask.')
+            raise Exception('Validation set "{args.validation_set}" does not point to EDOS.')
         wandb.init(project=project_name, entity='jagol', name=args.run_name, tags=[args.experiment_name])
 
     torch.manual_seed(args.seed)
