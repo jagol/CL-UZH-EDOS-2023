@@ -3,6 +3,7 @@ import json
 from typing import *
 
 from sklearn.metrics import accuracy_score, f1_score, recall_score, precision_score, roc_auc_score
+import torch
 
 from dataset import Dataset
 from get_loggers import get_logger
@@ -23,16 +24,33 @@ def to_int(value: float, threshold: float) -> int:
 
 
 def get_true_labels(items: Union[List[item_type], Dataset], label_key: str, threshold: float) -> List[int]:
-    return [to_int(item[label_key], threshold=threshold) for item in items]
+    labels = [item[label_key] for item in items]
+    if isinstance(labels[0], float):
+        labels = [to_int(label, threshold=threshold) for label in labels]
+    return labels
 
 
 def get_predictions(items: Union[List[item_type], Dataset], threshold: Optional[float], 
                     pred_key: str) -> Tuple[List[int], List[float]]:
     pred_labels = []
     pred_probs = []
-    for item in items:
-        pred_labels.append(to_int(item[pred_key], threshold=threshold))
-        pred_probs.append(item[pred_key])
+    if isinstance(items[0][pred_key], float) or isinstance(items[0][pred_key], int): 
+        for item in items:
+            pred_labels.append(to_int(item[pred_key], threshold=threshold))
+            pred_probs.append(item[pred_key])
+    elif isinstance(items[0][pred_key], list):
+        for item in items:
+            prob_distr = torch.nn.functional.softmax(torch.Tensor(item[pred_key]), -1)
+            largest_index = torch.argmax(prob_distr).item()
+            if threshold:
+                if prob_distr[largest_index].item() < threshold:
+                    pred_labels.append(0)
+                    pred_probs.append(None)
+                else:
+                    pred_labels.append(largest_index)
+                    pred_probs.append(prob_distr[largest_index].item())
+            else:
+                pred_probs.append(prob_distr[largest_index].item())
     return pred_labels, pred_probs
 
 
@@ -118,10 +136,10 @@ def compute_metrics_default(preds_labels: List[item_type], label_key: str, thres
         'acc': accuracy_score(true_labels, pred_labels),
         'f1-macro': f1_score(true_labels, pred_labels, average='macro'),
         'f1-weighted': f1_score(true_labels, pred_labels, average='weighted'),
-        'f1-binary': f1_score(true_labels, pred_labels, average='binary'),
-        'recall': recall_score(true_labels, pred_labels),
-        'precision': precision_score(true_labels, pred_labels),
-        'roc_aux_score': roc_auc_score(true_labels, pred_probs),
+        # 'f1-binary': f1_score(true_labels, pred_labels, average='binary'),
+        'recall': recall_score(true_labels, pred_labels, average='macro'),
+        'precision': precision_score(true_labels, pred_labels, average='macro'),
+        # 'roc_aux_score': roc_auc_score(true_labels, pred_probs, average='macro', multi_class='ovr'),
         'num-labels': num_true_labels,
         'true_class_freqs': true_class_freqs,
         'pred_class_freqs': pred_class_freqs
@@ -141,12 +159,18 @@ def load_preds_labels(path: str):
 
 
 def get_false_pos(preds_labels: List[item_type], threshold: float, pred_key: str) -> List[item_type]:
+    if isinstance(preds_labels[0][pred_key], list):
+        return [item for item in preds_labels if item['label_value'] == 0
+            and torch.argmax(torch.Tensor(item[pred_key])).item() == 1]
     return [item for item in preds_labels if item['label_value'] == 0
             and to_int(item[pred_key], threshold) == 1]
     
 
 
 def get_false_neg(preds_labels: List[item_type], threshold: float, pred_key) -> List[item_type]:
+    if isinstance(preds_labels[0][pred_key], list):
+        return [item for item in preds_labels if item['label_value'] == 1
+            and torch.argmax(torch.Tensor(item[pred_key])).item() == 0]
     return [item for item in preds_labels if item['label_value'] == 1 and 
             to_int(item[pred_key], threshold) == 0]
 
@@ -171,14 +195,14 @@ def main(args: argparse.Namespace) -> None:
     with open(args.out_path, 'w') as fout:
         json.dump(metrics, fout, ensure_ascii=False, indent=4)
 
-    false_pos_items = get_false_pos(preds_labels, threshold=args.threshold, pred_key=args.pred_key)
-    false_neg_items = get_false_neg(preds_labels, threshold=args.threshold, pred_key=args.pred_key)
-
-    thresh_repr = f'_{args.threshold}' if args.threshold else ''
-    false_pos_path = args.path_predictions[:-6] + f'_false_pos{thresh_repr}.jsonl'
-    false_neg_path = args.path_predictions[:-6] + f'_false_neg{thresh_repr}.jsonl'
-
     if args.write_false_preds:
+        false_pos_items = get_false_pos(preds_labels, threshold=args.threshold, pred_key=args.pred_key)
+        false_neg_items = get_false_neg(preds_labels, threshold=args.threshold, pred_key=args.pred_key)
+
+        thresh_repr = f'_{args.threshold}' if args.threshold else ''
+        false_pos_path = args.path_predictions[:-6] + f'_false_pos{thresh_repr}.jsonl'
+        false_neg_path = args.path_predictions[:-6] + f'_false_neg{thresh_repr}.jsonl'
+        
         eval_logger.info(f'Write false positives to: {false_pos_path}')
         with open(false_pos_path, 'w') as fout:
             for item in false_pos_items:
