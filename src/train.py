@@ -10,7 +10,8 @@ import torch
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments, Trainer, AutoTokenizer, 
-    EarlyStoppingCallback
+    EarlyStoppingCallback, 
+    AutoModelForSequenceClassification, AutoTokenizer
 )
 import wandb
 
@@ -71,6 +72,7 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         learning_rate=args.learning_rate,
         evaluation_strategy=args.evaluation_strategy,
         eval_steps=args.eval_steps,
+        eval_accumulation_steps=args.eval_accumulation_steps,
         load_best_model_at_end=True,
         metric_for_best_model='eval_f1-macro',
         report_to="wandb" if args.wandb else None,
@@ -145,19 +147,19 @@ def compute_metrics(eval_pred) -> Dict[str, float]:
 
 def compute_binary_metrics(logits, labels) -> Dict[str, float]:
     if NLI:
-        entail_contradiction_logits = torch.FloatTensor(logits[0][:, [0, 2]])
+        entail_contradiction_logits = torch.FloatTensor(logits[:, [0, 2]])
         # predictions = np.argmax(torch.nn.functional.softmax(logits_binary), axis=-1)
         predictions = [int(round(lb[1].item())) for lb in entail_contradiction_logits.softmax(dim=1)]
         labels_bin = map_ternary_labels_to_binary(labels.tolist())
         # predictions = list(entail_contradiction_logits.softmax(dim=1)[:, 1])
     else:
         predictions = [int(p) for p in logits.argmax(axis=1)]
-        labels_bin = [label[0] for label in labels.tolist()]
+        labels_bin = [label for label in labels.tolist()]
 
     with open(os.path.join(main_args.path_out_dir, f'comp_metrics_results_{num_comp_metrics_out}.json'), 'w') as fout:
         json.dump({'labels_bin': labels_bin, 'predictions': predictions}, fout)
     return {
-        'roc_aux_score': sklearn.metrics.roc_auc_score(labels_bin, predictions),
+        'roc_auc_score': sklearn.metrics.roc_auc_score(labels_bin, predictions),
         'accuracy': sklearn.metrics.accuracy_score(labels_bin, predictions),
         'f1-macro': sklearn.metrics.f1_score(labels_bin, predictions, average='macro'),
         'precision': sklearn.metrics.precision_score(labels_bin, predictions),
@@ -238,7 +240,7 @@ def main(args: argparse.Namespace) -> None:
     if args.nli:
         train_set.add_hypotheses('Dummy hypothesis.')
     train_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
-                             task_description=args.task_description)
+                             label_description=args.label_description)
     ensure_valid_encoding(train_set)
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.validation_set}')
@@ -247,7 +249,7 @@ def main(args: argparse.Namespace) -> None:
     if args.nli:
         train_set.add_hypotheses('Dummy hypothesis.')
     eval_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
-                            task_description=args.task_description)
+                            label_description=args.label_description)
 
     model_to_load = args.checkpoint if args.checkpoint else args.model_name
     TRAIN_LOGGER.info(f'Load Model from: {model_to_load}')
@@ -261,10 +263,10 @@ def main(args: argparse.Namespace) -> None:
     else:
         if args.nli:
             TRAIN_LOGGER.info(f'Set output layer to dimensionality to {3}')
-            model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=3)
+            model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=3, ignore_mismatched_sizes=True)
         else:
             TRAIN_LOGGER.info(f'Set output layer to dimensionality: {args.num_labels}')
-            model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels)
+            model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels, ignore_mismatched_sizes=True)
         train(train_set, eval_set, model, tokenizer, args)
 
 
@@ -284,7 +286,7 @@ if __name__ == '__main__':
     parser.add_argument('--no_cuda', action='store_true', help='Tell Trainer to not use cuda.')
 
     # task formulation
-    parser.add_argument('--task_description', action='store_true', help='If true, train using task descriptions.')
+    parser.add_argument('--label_description', action='store_true', help='If true, train using task descriptions.')
     parser.add_argument('-n', '--nli', action='store_true', help='If NLI formulation or not.')
     parser.add_argument('--dataset_token', action='store_true', help='If true, add a dataset token to the input.')
     parser.add_argument('-N', '--num_labels', type=int, default=2, help='Only needed if not NLI.')
@@ -300,7 +302,7 @@ if __name__ == '__main__':
     # hyperparams
     parser.add_argument('-E', '--epochs', type=float, default=5.0,
                         help='Number of epochs for fine-tuning.')
-    parser.add_argument('--patience', type=int, default=2, help='Patience for early stopping.')
+    parser.add_argument('--patience', type=int, default=3, help='Patience for early stopping.')
     parser.add_argument('-b', '--batch_size', type=int, default=1,
                         help='Batch-size to be used. Can only be set for training, '
                              'not for inference.')
@@ -320,6 +322,7 @@ if __name__ == '__main__':
     # evaluation and reporting
     parser.add_argument('--evaluation_strategy', choices=['no', 'steps', 'epoch'], default='epoch')
     parser.add_argument('--eval_steps', type=int, default=None)
+    parser.add_argument('--eval_accumulation_steps', type=int, default=32)
 
     # saving
     parser.add_argument('--save_strategy', default='epoch', choices=['epoch', 'steps', 'no'],
