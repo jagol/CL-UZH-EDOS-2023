@@ -89,6 +89,48 @@ class EDOS2023TaskCPreprocessor(Preprocessor):
         self.writer.write(std_entries, self.path_out)
 
 
+class DGHSDPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['text']), 
+                    label_type='hate speech', 
+                    label_value=1 if entry['label'] == 'hate' else 0,
+                    source=self.corpus_name,
+                )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
+
+class SBFPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['post']), 
+                    label_type='offensive', 
+                    label_value=1 if float(entry['offensiveYN']) >= 0.5 else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['post']), 
+                    label_type='lewd', 
+                    label_value=1 if float(entry['sexYN']) >= 0.5 else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
+
 def shuffle_corpus(path: str) -> None:
     with open(path) as fin:
         lines = fin.readlines()
@@ -138,13 +180,13 @@ def main(args: argparse.Namespace) -> None:
 
 
 CORPUS_TO_Preprocessor = {
-    # 'DGHSD': DGHSDPreprocessor,
+    'DGHSD': DGHSDPreprocessor,
     'EDOS2023TaskA': EDOS2023TaskAPreprocessor,
     'EDOS2023TaskB': EDOS2023TaskBPreprocessor,
     'EDOS2023TaskC': EDOS2023TaskCPreprocessor,
     # 'JigsawUBiTC': JigsawUBiTCPreprocessor,
     # 'HateCheck': HateCheckPreprocessor,
-    # 'SBF': SBFPreprocessor,
+    'SBF': SBFPreprocessor,
 }
 
 
