@@ -176,9 +176,23 @@ def get_false_neg(preds_labels: List[item_type], threshold: float, pred_key) -> 
             to_int(item[pred_key], threshold) == 0]
 
 
+def load_labels(path: str, label_key: str) -> Dict[str, int]:
+    """return a dict of the form {id: label_value}"""
+    label_values = {}
+    with open(path) as fin:
+        for line in fin:
+            d = json.loads(line)
+            label_values[d['id']] = d[label_key]
+    return label_values
+
+
 def main(args: argparse.Namespace) -> None:
     eval_logger.info(f'Load prediction from: {args.path_predictions}')
     preds_labels = load_preds_labels(args.path_predictions)
+    if args.path_labels:
+        label_values = load_labels(args.path_labels, args.label_file_label_key)
+        for pred_label in preds_labels:
+            pred_label[args.label_key] = label_values[pred_label['id']]
 
     if args.evalset_name == 'MHC':
         eval_logger.info('Use method: compute_metrics_hatecheck')
@@ -217,6 +231,10 @@ def main(args: argparse.Namespace) -> None:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--path_predictions', help='Path to file containing predictions.')
+    parser.add_argument('--path_labels', required=False, help='If this argument is set, the labels are loaded from '
+                        'this file and the label values of the "path_predictions" will be overwritten.')
+    parser.add_argument('--label_file_label_key', required=False, help='If "path_labels" is set, set use this argument '
+                        'to set the korrekt key for the label to load.')
     parser.add_argument('-d', '--evalset_name', help='Name of dataset.')
     parser.add_argument('-o', '--out_path', help='Path to output file containing scores/metrics.')
     parser.add_argument('-t', '--threshold', type=float, help='For binary predictions: set a '
