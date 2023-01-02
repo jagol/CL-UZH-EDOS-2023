@@ -50,6 +50,7 @@ def get_predictions(items: Union[List[item_type], Dataset], threshold: Optional[
                     pred_labels.append(largest_index)
                     pred_probs.append(prob_distr[largest_index].item())
             else:
+                pred_labels.append(largest_index)
                 pred_probs.append(prob_distr[largest_index].item())
     return pred_labels, pred_probs
 
