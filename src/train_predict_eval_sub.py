@@ -7,6 +7,7 @@ import generate_submission_file
 from get_loggers import get_logger
 import map_multiclass_to_binary_preds
 import predict
+import ensemble_predict
 import train
 
 
@@ -17,35 +18,51 @@ def main(args: argparse.Namespace) -> None:
     with open(args.path_config) as fin:
         config = json.load(fin)
     
-    # training
-    RUN_LOGGER.info('Start training.')
-    train.main(argparse.Namespace(**config['train']))
-    RUN_LOGGER.info('Finished training.')
-    RUN_LOGGER.info('Delete checkpoints.')
-    delete_checkpoints.main(argparse.Namespace(**config['delete_checkpoints']))
-    RUN_LOGGER.info('Finished deleting checkpoints.')
+    # # training
+    # for key in config:
+    #     if key.startswith('train'):
+    #         RUN_LOGGER.info('Start training.')
+    #         train.main(argparse.Namespace(**config[key]))
+    #         RUN_LOGGER.info('Finished training.')
     
-    # predict on both devsets
-    RUN_LOGGER.info('Start prediction on internal dev set.')
-    predict.main(argparse.Namespace(**config['predict']))
-    RUN_LOGGER.info('Finished prediction on internal dev set.')
+    # # deleting checkpoints
+    # for key in config:
+    #     if key.startswith('delete_checkpoints'):
+    #         RUN_LOGGER.info('Delete checkpoints.')
+    #         delete_checkpoints.main(argparse.Namespace(**config[key]))
+    #         RUN_LOGGER.info('Finished deleting checkpoints.')
+    
+    # # predicting
+    # for key in config:
+    #     if key.startswith('predict'):
+    #         # predict on both devsets
+    #         RUN_LOGGER.info('Start prediction on internal dev set.')
+    #         predict.main(argparse.Namespace(**config[key]))
+    #         RUN_LOGGER.info('Finished prediction on internal dev set.')
+    
+    # ensemble predicting
+    for key in config:
+        if key.startswith('ensemble_predict'):
+            # predict on both devsets
+            RUN_LOGGER.info('Start ensemble prediction.')
+            ensemble_predict.main(argparse.Namespace(**config[key]))
+            RUN_LOGGER.info('Finished ensemble prediction.')
+    
+    # label mapping
+    for key in config:
+        if key.startswith('map_multiclass_to_binary_preds'):
+            RUN_LOGGER.info('Start mapping onto binary labels.')
+            map_multiclass_to_binary_preds.main(argparse.Namespace(**config[key]))
+            RUN_LOGGER.info('Finished mapping onto binary labels.')
 
-    # internal devset
-    if 'map_multiclass_to_binary_preds_internal_dev' in config:
-        RUN_LOGGER.info('Start mapping onto binary labels.')
-        map_multiclass_to_binary_preds.main(argparse.Namespace(**config['map_multiclass_to_binary_preds_internal_dev']))
-        RUN_LOGGER.info('Finished mapping onto binary labels.')
+    # evaluation
     for key in config:
         if key.startswith('evaluate_predictions'):
             RUN_LOGGER.info('Evaluate predictions on internal dev set.')
             evaluate_predictions.main(argparse.Namespace(**config[key]))
             RUN_LOGGER.info('Finished evaluation of predictions on internal dev set.')
     
-    # official dev-set
-    if 'map_multiclass_to_binary_preds_official_dev' in config:
-        RUN_LOGGER.info('Start mapping onto binary labels.')
-        map_multiclass_to_binary_preds.main(argparse.Namespace(**config['map_multiclass_to_binary_preds_official_dev']))
-        RUN_LOGGER.info('Finished mapping onto binary labels.')
+    # generation of submission files
     for key in config:
         if key.startswith('generate_submission_file'):
             RUN_LOGGER.info('Generate dev-set submission file.')
