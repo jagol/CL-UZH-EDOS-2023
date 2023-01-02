@@ -7,11 +7,13 @@ from typing import *
 from tqdm import tqdm
 
 import torch
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, DebertaV2ForSequenceClassification, DebertaV2Tokenizer
 
 from dataset import Dataset
 from get_loggers import get_logger
 from delete_checkpoints import CHECKPOINT_REGEX
+from mappings import CAT_LABEL_NUM_TO_STR, VEC_LABEL_NUM_TO_STR, LABEL_STR_TO_LABEL_NUM, BIN_LABEL_NUM_TO_STR
+from to_label_desc_format import strip_numbering
 
 
 # warnings.filterwarnings('ignore')
@@ -122,19 +124,30 @@ class NLIPredictor(Predictor):
 
 class TaskDescPredictor(Predictor):
 
-    @torch.no_grad()
-    def classify(self, input_text: str, task_description: str) -> float:
+    def classify(self, input_text: str, label_description: str) -> float:
         """Perform generic classification (no nli), binary or multi-class.
 
         Args:
             input_text: Text to be classified.
-            task_description: describes the task for the classifier.
+            label_description: describes the task for the classifier.
         Return:
-            List of class probabilities.
+            Probabilities of the positive class.
         """
-        encoded_input = Dataset.encode_item_with_task_descriptions(
-            self._tokenizer, text=input_text, task_description=task_description)
-        del encoded_input['token_type_ids']
+        return self._classify(input_text, label_description)
+
+    @torch.no_grad()
+    def _classify(self, input_text: str, label_description: str) -> float:
+        """Perform generic classification (no nli), binary or multi-class.
+
+        Args:
+            input_text: Text to be classified.
+            label_description: describes the task for the classifier.
+        Return:
+            Probabilities of the positive class.
+        """
+        encoded_input = Dataset.encode_item_with_label_descriptions(
+            self._tokenizer, text=input_text, label_description=label_description)
+        # del encoded_input['token_type_ids']
         logits = self._model(**encoded_input.to(self._device))[0]
         return self.logits_to_prob(logits)
 
@@ -142,6 +155,57 @@ class TaskDescPredictor(Predictor):
     def logits_to_prob(logits: torch.FloatTensor) -> float:
         prob_distr = torch.softmax(logits.squeeze(), dim=0)
         return float(prob_distr[1])  # take the probability of the positive class
+
+
+class TaskDescCategoryPredictor(TaskDescPredictor):
+    
+    def classify(self, input_text: str, label_description: Optional[str] = None) -> List[float]:
+        """Perform generic classification (no nli), binary or multi-class.
+
+        Args:
+            input_text: Text to be classified.
+            label_description: describes the task for the classifier.
+        Return:
+            Probabilities of the positive class.
+        """
+        cat_probs = []
+        for label, cat_str in CAT_LABEL_NUM_TO_STR.items():
+            cat_probs.append(self._classify(input_text, strip_numbering(cat_str)))
+        return cat_probs
+
+
+class TaskDescVectorPredictor(TaskDescPredictor):
+    
+    def classify(self, input_text: str, label_description: Optional[str] = None) -> List[float]:
+        """Perform generic classification (no nli), binary or multi-class.
+
+        Args:
+            input_text: Text to be classified.
+            label_description: describes the task for the classifier.
+        Return:
+            Probabilities of the positive class.
+        """
+        cat_probs = []
+        for label, vec_str in VEC_LABEL_NUM_TO_STR.items():
+            cat_probs.append(self._classify(input_text, strip_numbering(vec_str)))
+        return cat_probs
+    
+
+class TaskDescVectorPredictorMaxToBin(TaskDescPredictor):
+    
+    def classify(self, label_description: str, input_text: str) -> List[float]:
+        """Perform generic classification (no nli), binary or multi-class.
+
+        Args:
+            input_text: Text to be classified.
+            label_description: describes the task for the classifier.
+        Return:
+            Probabilities of the positive class.
+        """
+        cat_probs = []
+        for label, vec_str in VEC_LABEL_NUM_TO_STR.items():
+            cat_probs.append(self._classify(input_text, strip_numbering(vec_str)))
+        return max(cat_probs)
 
 
 class PredictionPipeline:
@@ -180,6 +244,18 @@ class PredictionPipeline:
         return self._strategies[self._strategy](input_text)
 
 
+PREDICTORS = {
+    # 'Max3LLLabelDescPredictor': Max3LLLabelDescPredictor,
+    'PredictionPipeline': PredictionPipeline,
+    'NLIPredictor': NLIPredictor,
+    'TaskDescPredictor': TaskDescPredictor,
+    'TaskDescCategoryPredictor': TaskDescCategoryPredictor,
+    'TaskDescVectorPredictorMaxToBin': TaskDescVectorPredictorMaxToBin,
+    'TaskDescVectorPredictor': TaskDescVectorPredictor,
+    'StandardPredictor': StandardPredictor
+}
+
+
 def main(args) -> None:
     # create dir if it does not exist
     if not os.path.exists(args.path_out_dir):
@@ -215,17 +291,17 @@ def main(args) -> None:
     # Load the correct predictor
     if args.path_strat_config:
         predictor = PredictionPipeline(path_config=args.path_strat_config, device=device)
-    elif args.hypothesis:
-        predictor = NLIPredictor(model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
-    elif args.task_description:
-        predictor = TaskDescPredictor(model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
     else:
-        predictor = StandardPredictor(model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
+        predictor = PREDICTORS[args.predictor](model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
     pred_logger.info('Start prediction.')
-    for eval_set in eval_sets:
+    for i, eval_set in enumerate(eval_sets):
         eval_set_path, eval_set_fname = os.path.split(eval_set._path_to_dataset)
-        fname, extension = os.path.splitext(eval_set_fname)
-        fout = open(os.path.join(args.path_out_dir, fname + '.jsonl'), 'w')
+        if args.fnames_out:
+            fname = args.fnames_out[i]
+        else:
+            fname, extension = os.path.splitext(eval_set_fname)
+            fname += '.jsonl'
+        fout = open(os.path.join(args.path_out_dir, fname), 'w')
         pred_logger.info(f'Predict on: {eval_set.name}, fname: {os.path.split(eval_set._path_to_dataset)[1]}')
         for item in tqdm(eval_set):
             if args.path_strat_config:
@@ -236,14 +312,19 @@ def main(args) -> None:
                         input_text=item['text'], hypothesis=f"[{eval_set.name}] {args.hypothesis}")
                 else:
                     item['prediction'] = predictor.classify(input_text=item['text'], hypotheses=args.hypothesis)
-            elif args.task_description:
-                item['prediction'] = predictor.classify(input_text=item['text'], task_description=item['label_desc'])
+            elif args.label_description  and args.predictor == 'TaskDescPredictor':
+                # Only pass label_desc argument for the binary prediction done by TaskDescPredictor.
+                # Other Multi-label predictors that the label descriptions already saved internally.
+                if args.dataset_token:
+                    item['prediction'] = predictor.classify(input_text=item['text'], label_description=f"[{eval_set.name}] {item['label_desc']}")
+                else:
+                    item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
             else:
                 # do standard classification
                 if args.dataset_token:
-                    item['class_probs'] = predictor.classify(f"[{item['source']}] {item['text']}")
+                    item['prediction'] = predictor.classify(f"[{item['source']}] {item['text']}")
                 else:
-                    item['class_probs'] = predictor.classify(input_text=item['text'])
+                    item['prediction'] = predictor.classify(input_text=item['text'])
                 # item['prediction_int'] = item['class_probs'].index(max(item['class_probs']))
             fout.write(json.dumps(item, ensure_ascii=False) + '\n')
         fout.close()
@@ -255,6 +336,8 @@ if __name__ == '__main__':
     parser.add_argument('-g', '--gpu', type=int, help='GPU number to use, -1 means cpu.')
     parser.add_argument('-o', '--path_out_dir', help='Path to an output directory.')
     parser.add_argument('-p', '--eval_set_paths', nargs='+', help='Paths to evaluation sets.')
+    parser.add_argument('--fnames_out', nargs='+', required=False, help='Names of outfiles. Sorting corresponds to evaluation set-paths. '
+                        'If not set, filename is constructed automatically from the evaluation set.')
     # for using a predictor
     parser.add_argument('-m', '--model_name', required=False, help='Hugging-Face name of model/tokenizer.')
     parser.add_argument('-c', '--model_checkpoint', required=False,
@@ -264,9 +347,11 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--dataset_token', action='store_true',
                         help='If dataset token should be used or not. Parent directory name of dataset is used as '
                              'dataset token.')
-    parser.add_argument('--task_description', action='store_true', help='If true, use label_type as task description.')
+    parser.add_argument('--label_description', action='store_true', help='If true, use label_type as task description.')
+    parser.add_argument('--label_desc_category', action='store_true', help='Predict sexism categories')
     # for using a prediction pipeline
     parser.add_argument('--path_strat_config', required=False,
                         help='If using a "strategy": use this path to point to the config for the strategy (json).')
+    parser.add_argument('--predictor', choices=list(PREDICTORS.keys()))
     cmd_args = parser.parse_args()
     main(cmd_args)
