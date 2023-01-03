@@ -131,6 +131,38 @@ class SBFPreprocessor(Preprocessor):
         self.writer.write(std_entries, self.path_out)
 
 
+class MHSPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry['comment_id'], 
+                    text=self.cleaner.clean(entry['text']), 
+                    label_type='hate speech', 
+                    label_value=1 if float(entry['hatespeech']) >= 0.5 else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['text']), 
+                    label_type='targets gender', 
+                    label_value=1 if entry['target_gender'] == 'True' else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['text']), 
+                    label_type='targets women', 
+                    label_value=1 if entry['target_women'] == 'True' else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
 def shuffle_corpus(path: str) -> None:
     with open(path) as fin:
         lines = fin.readlines()
@@ -186,6 +218,7 @@ CORPUS_TO_Preprocessor = {
     'EDOS2023TaskC': EDOS2023TaskCPreprocessor,
     # 'JigsawUBiTC': JigsawUBiTCPreprocessor,
     # 'HateCheck': HateCheckPreprocessor,
+    'MHS': MHSPreprocessor,
     'SBF': SBFPreprocessor,
 }
 

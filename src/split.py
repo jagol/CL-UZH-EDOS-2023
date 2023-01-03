@@ -6,7 +6,7 @@ from dataset_io import *
 
 
 """
-Script to split in input corpus into two parts.
+Script to split input corpus into two parts.
 Intended for creating train/dev or dev/test splits.
 """
 

@@ -71,6 +71,10 @@ def to_label_desc_format(dataset: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             desc_item['label_desc'] = 'offensive'
         elif item['label_type'] == 'lewd':
             desc_item['label_desc'] = 'lewd'
+        elif item['label_type'] == 'targets gender':
+            desc_item['label_desc'] = 'targets gender'
+        elif item['label_type'] == 'targets women':
+            desc_item['label_desc'] = 'targets women'
         else:
             raise Exception(f"Unexpected label type: {item['label_type']}")
         dataset_label_desc.append(desc_item)
