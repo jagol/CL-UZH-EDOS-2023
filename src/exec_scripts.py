@@ -18,27 +18,27 @@ def main(args: argparse.Namespace) -> None:
     with open(args.path_config) as fin:
         config = json.load(fin)
     
-    # # training
-    # for key in config:
-    #     if key.startswith('train'):
-    #         RUN_LOGGER.info('Start training.')
-    #         train.main(argparse.Namespace(**config[key]))
-    #         RUN_LOGGER.info('Finished training.')
+    # training
+    for key in config:
+        if key.startswith('train'):
+            RUN_LOGGER.info('Start training.')
+            train.main(argparse.Namespace(**config[key]))
+            RUN_LOGGER.info('Finished training.')
     
-    # # deleting checkpoints
-    # for key in config:
-    #     if key.startswith('delete_checkpoints'):
-    #         RUN_LOGGER.info('Delete checkpoints.')
-    #         delete_checkpoints.main(argparse.Namespace(**config[key]))
-    #         RUN_LOGGER.info('Finished deleting checkpoints.')
+    # deleting checkpoints
+    for key in config:
+        if key.startswith('delete_checkpoints'):
+            RUN_LOGGER.info('Delete checkpoints.')
+            delete_checkpoints.main(argparse.Namespace(**config[key]))
+            RUN_LOGGER.info('Finished deleting checkpoints.')
     
-    # # predicting
-    # for key in config:
-    #     if key.startswith('predict'):
-    #         # predict on both devsets
-    #         RUN_LOGGER.info('Start prediction on internal dev set.')
-    #         predict.main(argparse.Namespace(**config[key]))
-    #         RUN_LOGGER.info('Finished prediction on internal dev set.')
+    # predicting
+    for key in config:
+        if key.startswith('predict'):
+            # predict on both devsets
+            RUN_LOGGER.info('Start prediction on internal dev set.')
+            predict.main(argparse.Namespace(**config[key]))
+            RUN_LOGGER.info('Finished prediction on internal dev set.')
     
     # ensemble predicting
     for key in config:
