@@ -169,7 +169,7 @@ def compute_binary_metrics(logits, labels) -> Dict[str, float]:
 
 def compute_multi_class_metrics(logits, labels) -> Dict[str, float]:
     predictions = [int(p) for p in logits.argmax(axis=1)]
-    labels_list = [label[0] for label in labels.tolist()]
+    labels_list = [label for label in labels.tolist()]
     with open(os.path.join(main_args.path_out_dir, f'comp_metrics_results_{num_comp_metrics_out}.json'), 'w') as fout:
         json.dump({'labels': labels_list, 'predictions': predictions}, fout)
     return {
