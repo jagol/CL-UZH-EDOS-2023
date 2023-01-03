@@ -40,18 +40,18 @@ def get_predictions(items: Union[List[item_type], Dataset], threshold: Optional[
             pred_probs.append(item[pred_key])
     elif isinstance(items[0][pred_key], list):
         for item in items:
-            prob_distr = torch.nn.functional.softmax(torch.Tensor(item[pred_key]), -1)
-            largest_index = torch.argmax(prob_distr).item()
+            prob_distr = item[pred_key]
+            largest_index = torch.argmax(torch.FloatTensor(prob_distr)).item()
             if threshold:
-                if prob_distr[largest_index].item() < threshold:
+                if prob_distr[largest_index] < threshold:
                     pred_labels.append(0)
                     pred_probs.append(None)
                 else:
                     pred_labels.append(largest_index)
-                    pred_probs.append(prob_distr[largest_index].item())
+                    pred_probs.append(prob_distr[largest_index])
             else:
                 pred_labels.append(largest_index)
-                pred_probs.append(prob_distr[largest_index].item())
+                pred_probs.append(prob_distr[largest_index])
     return pred_labels, pred_probs
 
 
