@@ -73,14 +73,14 @@ class Dataset(torch.utils.data.IterableDataset):
             return True
         return False
 
-    def encode_dataset(self, tokenizer, dataset_token: bool = False, task_description: bool = False) -> None:
+    def encode_dataset(self, tokenizer, dataset_token: bool = False, label_description: bool = False) -> None:
         for item in tqdm(self._items):
-            if task_description and dataset_token:
-                enc = self.encode_item_with_task_descriptions_and_dataset_token(
-                    tokenizer, text=item['text'], source=item['source'], task_description=item['label_desc'])
-            elif task_description:
-                enc = self.encode_item_with_task_descriptions(
-                    tokenizer, text=item['text'], task_description=item['label_desc'])
+            if label_description and dataset_token:
+                enc = self.encode_item_with_label_descriptions_and_dataset_token(
+                    tokenizer, text=item['text'], source=item['source'], label_description=item['label_desc'])
+            elif label_description:
+                enc = self.encode_item_with_label_descriptions(
+                    tokenizer, text=item['text'], label_description=item['label_desc'])
             elif dataset_token and self._has_hypotheses():
                 enc = self.encode_item_with_dataset_token_and_hypotheses(
                     tokenizer, text=item['text'], source=item['source'], hypothesis=item['hypothesis'])
@@ -90,7 +90,7 @@ class Dataset(torch.utils.data.IterableDataset):
                 enc = self.encode_item_with_hypotheses(tokenizer, text=item['text'], hypothesis=item['hypothesis'])
             else:
                 enc = self.encode_item(tokenizer, item['text'])
-            enc['labels'] = get_numeric_label(item)
+            enc['labels'] = get_numeric_label(item).squeeze()
             enc['input_ids'] = enc['input_ids'].squeeze()
             try:
                 enc['token_type_ids'] = enc['token_type_ids'].squeeze()
@@ -119,12 +119,12 @@ class Dataset(torch.utils.data.IterableDataset):
                          padding=True, return_token_type_ids=True)
 
     @staticmethod
-    def encode_item_with_task_descriptions(tokenizer, text: str, task_description: str):
-        return tokenizer(text=text, text_pair=task_description, return_tensors='pt', truncation=True,
+    def encode_item_with_label_descriptions(tokenizer, text: str, label_description: str):
+        return tokenizer(text=label_description, text_pair=text, return_tensors='pt', truncation=True,
                          padding=True, return_token_type_ids=True)
 
     @staticmethod
-    def encode_item_with_task_descriptions_and_dataset_token(tokenizer, text: str, source: str, task_description: str
+    def encode_item_with_label_descriptions_and_dataset_token(tokenizer, text: str, source: str, label_description: str
                                                              ) -> Dict[str, Any]:
-        return tokenizer(text=text, text_pair=f'[{source}] {task_description}', return_tensors='pt',
+        return tokenizer(text=f'[{source}] {label_description}', text_pair=text, return_tensors='pt',
                          truncation=True, padding=True, return_token_type_ids=True)
