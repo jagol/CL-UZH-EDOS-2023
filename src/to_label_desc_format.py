@@ -65,16 +65,140 @@ def to_label_desc_format(dataset: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 desc_item['label_desc'] = f"{strip_numbering(VEC_LABEL_NUM_TO_STR[item['label_value']])} (against women)"
                 desc_item['orig_label_value'] = desc_item['label_value']
                 desc_item['label_value'] = 1
+        # DGHSD
         elif item['label_type'] == 'hate speech':
             desc_item['label_desc'] = 'hate speech'
+        # SBF
         elif item['label_type'] == 'offensive':
             desc_item['label_desc'] = 'offensive'
         elif item['label_type'] == 'lewd':
             desc_item['label_desc'] = 'lewd'
+        # MHS
         elif item['label_type'] == 'targets gender':
             desc_item['label_desc'] = 'targets gender'
         elif item['label_type'] == 'targets women':
             desc_item['label_desc'] = 'targets women'
+        # TWE
+        elif item['label_type'] == 'hate':
+            desc_item['label_desc'] = 'hate'
+        elif item['label_type'] == 'irony':
+            desc_item['label_desc'] = 'irony'
+        elif item['label_type'] == 'sentiment':
+            pos_or_neg = random.randint(0, 1)
+            sentiments = ['negative', 'neutral', 'positive']
+            if item['label_value'] == 0:
+                if pos_or_neg:
+                    desc_item['label_desc'] = 'sentiment: negative'
+                    desc_item['label_value'] = 1
+                else:
+                    sent_idx = random.choice([1, 2])
+                    desc_item['label_desc'] = f'sentiment: {sentiments[sent_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 1:
+                if pos_or_neg:
+                    desc_item['label_desc'] = 'sentiment: neutral'
+                    desc_item['label_value'] = 1
+                else:
+                    sent_idx = random.choice([0, 2])
+                    desc_item['label_desc'] = f'sentiment: {sentiments[sent_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 2:
+                if pos_or_neg:
+                    desc_item['label_desc'] = 'sentiment: positive'
+                    desc_item['label_value'] = 1
+                else:
+                    sent_idx = random.choice([0, 1])
+                    desc_item['label_desc'] = f'sentiment: {sentiments[sent_idx]}'
+                    desc_item['label_value'] = 0
+        elif item['label_type'] == 'stance_abortion':
+            pos_or_neg = random.randint(0, 1)
+            stances = ['none', 'against', 'favor']
+            if item['label_value'] == 0:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance abortion: {stances[0]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([1, 2])
+                    desc_item['label_desc'] = f'stance abortion: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 1:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance abortion: {stances[1]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([0, 2])
+                    desc_item['label_desc'] = f'stance abortion: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 2:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance abortion: {stances[2]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([0, 1])
+                    desc_item['label_desc'] = f'stance abortion: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+        elif item['label_type'] == 'stance_feminist':
+            pos_or_neg = random.randint(0, 1)
+            stances = ['none', 'against', 'favor']
+            if item['label_value'] == 0:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance feminist: {stances[0]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([1, 2])
+                    desc_item['label_desc'] = f'stance feminist: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 1:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance feminist: {stances[1]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([0, 2])
+                    desc_item['label_desc'] = f'stance feminist: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 2:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'stance feminist: {stances[2]}'
+                    desc_item['label_value'] = 1
+                else:
+                    stance_idx = random.choice([0, 1])
+                    desc_item['label_desc'] = f'stance feminist: {stances[stance_idx]}'
+                    desc_item['label_value'] = 0
+        elif item['label_type'] == 'emotion':
+            pos_or_neg = random.randint(0, 1)
+            emotions = ['anger', 'joi', 'optimism', 'sadness']
+            if item['label_value'] == 0:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'emotion: {emotions[0]}'
+                    desc_item['label_value'] = 1
+                else:
+                    emo_idx = random.choice([1, 2, 3])
+                    desc_item['label_desc'] = f'emotion: {emotions[emo_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 1:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'emotion: {emotions[1]}'
+                    desc_item['label_value'] = 1
+                else:
+                    emo_idx = random.choice([0, 2, 3])
+                    desc_item['label_desc'] = f'emotion: {emotions[emo_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 2:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'emotion: {emotions[2]}'
+                    desc_item['label_value'] = 1
+                else:
+                    emo_idx = random.choice([0, 1, 3])
+                    desc_item['label_desc'] = f'emotion: {emotions[emo_idx]}'
+                    desc_item['label_value'] = 0
+            elif item['label_value'] == 3:
+                if pos_or_neg:
+                    desc_item['label_desc'] =  f'emotion: {emotions[3]}'
+                    desc_item['label_value'] = 1
+                else:
+                    emo_idx = random.choice([0, 1, 2])
+                    desc_item['label_desc'] = f'emotion: {emotions[emo_idx]}'
+                    desc_item['label_value'] = 0
         else:
             raise Exception(f"Unexpected label type: {item['label_type']}")
         dataset_label_desc.append(desc_item)
