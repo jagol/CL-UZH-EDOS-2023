@@ -161,7 +161,7 @@ class StaggeredLabelDescStandardPredictor(StaggeredPredictor):
                 self._tokenizer_2, text=input_text, source=self._dataset_token_2)
         else:
             encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
-        encoded_input_1 = Dataset.encode_item_with_label_descriptions(self._tokenizer_1, text=input_text)
+        encoded_input_1 = Dataset.encode_item_with_label_descriptions(self._tokenizer_1, text=input_text, label_description=label_description)
         encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
         bin_pred_logits = self._model_1(**encoded_input_1.to(self._device))[0].squeeze()
         bin_pred_prob = torch.softmax(bin_pred_logits, dim=0)[1]
@@ -259,42 +259,6 @@ class TaskDescVectorPredictorMaxToBin(TaskDescPredictor):
         return max(cat_probs)
 
 
-class PredictionPipeline:
-
-    def __init__(self, path_config: str, device: str) -> None:
-        self._path_config = path_config
-        self._device = device
-        self._strategies = {
-            'hof_hypos': self._hof_hypos
-        }
-
-        with open(path_config) as fin:
-            self._config = json.load(fin)
-        self._strategy = self._config['strategy']
-
-        # load predictors
-        self._predictors = {}  # {'<name>': {'model': model, 'tokenizer': tokenizer}}
-        for pred_name in self._config['predictors']:
-            model_dict = self._config['predictors'][pred_name]
-            self._predictors[pred_name] = {}
-            pred_logger.info(f'Load tokenizer and model for {pred_name}')
-            if model_dict['type'] == 'NLI':
-                self._predictors[pred_name] = NLIPredictor(
-                    model_name=model_dict['model'], model_checkpoint=model_dict['checkpoint'], device=device)
-            else:
-                self._predictors[pred_name] = Predictor(
-                    model_name=model_dict['model'], model_checkpoint=model_dict['checkpoint'], device=device)
-
-    def _hof_hypos(self, input_text: str) -> nli_results_type:
-        pred_name = list(self._config['predictors'].keys())[0]
-        hypotheses = ['Dieser Text enthält Hass.', 'Dieser Text ist obszön.', 'Dieser Text ist beleidigend.']
-        probs = self._predictors[pred_name].classify(input_text=input_text, hypotheses=hypotheses)
-        return {'final': max(probs), 'individual': {h: p for h, p in zip(hypotheses, probs)}}
-
-    def classify(self, input_text: str) -> nli_results_type:
-        return self._strategies[self._strategy](input_text)
-
-
 def get_model_checkpoint_path(model_checkpoint: Optional[str]) -> str:
     """If path is not a model checkpoint, search for a checkpoint in the given directory."""
     if model_checkpoint:
@@ -315,9 +279,7 @@ def get_model_checkpoint_path(model_checkpoint: Optional[str]) -> str:
 
 
 def get_predictor(args: argparse.Namespace, model_checkpoint: str, device: str) -> Predictor:
-    if args.path_strat_config:
-        predictor = PredictionPipeline(path_config=args.path_strat_config, device=device)
-    elif args.predictor == 'StaggeredStandardPredictor':
+    if args.predictor == 'StaggeredStandardPredictor':
         model_checkpoint = get_model_checkpoint_path(args.model_checkpoint)
         model_checkpoint_2 = get_model_checkpoint_path(args.model_checkpoint_2)
         predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=model_checkpoint, dataset_token=args.dataset_token,
@@ -331,7 +293,6 @@ def get_predictor(args: argparse.Namespace, model_checkpoint: str, device: str) 
 
 
 PREDICTORS = {
-    'PredictionPipeline': PredictionPipeline,
     'TaskDescPredictor': TaskDescPredictor,
     'TaskDescCategoryPredictor': TaskDescCategoryPredictor,
     'TaskDescVectorPredictorMaxToBin': TaskDescVectorPredictorMaxToBin,
@@ -372,9 +333,7 @@ def main(args) -> None:
         fout = open(os.path.join(args.path_out_dir, fname), 'w')
         pred_logger.info(f'Predict on: {eval_set.name}, fname: {os.path.split(eval_set._path_to_dataset)[1]}')
         for item in tqdm(eval_set):
-            if args.path_strat_config:
-                item['prediction'] = predictor.classify(input_text=item['text'])
-            elif args.label_description and args.predictor == 'TaskDescPredictor':
+            if args.label_description and args.predictor == 'TaskDescPredictor':
                 # Only pass label_desc argument for the binary prediction done by TaskDescPredictor.
                 # Other Multi-label predictors that the label descriptions already saved internally.
                 item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
@@ -406,9 +365,6 @@ if __name__ == '__main__':
                              'dataset token.')
     parser.add_argument('--label_description', action='store_true', help='If true, use label_type as task description.')
     parser.add_argument('--label_desc_category', action='store_true', help='Predict sexism categories')
-    # for using a prediction pipeline
-    parser.add_argument('--path_strat_config', required=False,
-                        help='If using a "strategy": use this path to point to the config for the strategy (json).')
     parser.add_argument('--predictor', choices=list(PREDICTORS.keys()))
     cmd_args = parser.parse_args()
     main(cmd_args)
