@@ -68,6 +68,53 @@ class StandardPredictor(Predictor):
         return float(prob_distr[1])  # take the probability of the positive class
 
 
+class StaggeredStandardPredictor(Predictor):
+    
+    def __init__(self, model_name_1: str, model_checkpoint_1: Optional[str], model_name_2: str, model_checkpoint_2: str, device: str) -> None:
+        pred_logger.info('Initialize Predictor.')
+        self._model_name_1 = model_name_1
+        self._model_checkpoint_1 = model_checkpoint_1
+        self._model_name_2 = model_name_2
+        self._model_checkpoint_2 = model_checkpoint_2
+        self._device = device
+        # model 1: binary decision
+        pred_logger.info('Load tokenizer.')
+        self._tokenizer_1 = AutoTokenizer.from_pretrained(model_name_1)
+        pred_logger.info(f'Load model {model_name_1} from checkpoint {model_checkpoint_1}.')
+        self._model_1 = AutoModelForSequenceClassification.from_pretrained(
+            model_checkpoint_1 if model_checkpoint_1 else model_name_1
+        )
+        pred_logger.info(f'Move model to device: {self._device}')
+        self._model_1.to(self._device)
+        self._model_1.eval()
+        # model 2: fine-grained decision
+        pred_logger.info('Load tokenizer.')
+        self._tokenizer_2 = AutoTokenizer.from_pretrained(model_name_2)
+        pred_logger.info(f'Load model {model_name_1} from checkpoint {model_checkpoint_2}.')
+        self._model_2 = AutoModelForSequenceClassification.from_pretrained(
+            model_checkpoint_2 if model_checkpoint_2 else model_name_2
+        )
+        pred_logger.info(f'Move model to device: {self._device}')
+        self._model_2.to(self._device)
+        self._model_2.eval()
+    
+    @torch.no_grad()
+    def classify(self, input_text: str) -> Tuple[float, List[float]]:
+        """Perform generic classification (no nli), binary or multi-class.
+
+        Args:
+            input_text: Text to be classified.
+        Return:
+            List of class probabilities.
+        """
+        encoded_input_1 = Dataset.encode_item(self._tokenizer_1, text=input_text)
+        encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
+        bin_pred_logits = self._model_1(**encoded_input_1.to(self._device))[0].squeeze()
+        bin_pred_prob = torch.softmax(bin_pred_logits, dim=0)[1]
+        fine_grained_logits = self._model_2(**encoded_input_2.to(self._device))[0]
+        return float(bin_pred_prob.item()), torch.softmax(fine_grained_logits.squeeze(), dim=0).tolist()
+
+
 class NLIPredictor(Predictor):
 
     def __init__(self, model_name: str, model_checkpoint: Optional[str], device: str) -> None:
@@ -252,6 +299,7 @@ PREDICTORS = {
     'TaskDescCategoryPredictor': TaskDescCategoryPredictor,
     'TaskDescVectorPredictorMaxToBin': TaskDescVectorPredictorMaxToBin,
     'TaskDescVectorPredictor': TaskDescVectorPredictor,
+    'StaggeredStandardPredictor': StaggeredStandardPredictor,
     'StandardPredictor': StandardPredictor
 }
 
@@ -291,6 +339,10 @@ def main(args) -> None:
     # Load the correct predictor
     if args.path_strat_config:
         predictor = PredictionPipeline(path_config=args.path_strat_config, device=device)
+    elif args.predictor == 'StaggeredStandardPredictor':
+        predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=args.model_checkpoint, 
+                                               model_name_2=args.model_name_2, model_checkpoint_2=args.model_checkpoint_2, 
+                                               device=device)
     else:
         predictor = PREDICTORS[args.predictor](model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
     pred_logger.info('Start prediction.')
@@ -343,6 +395,8 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--model_checkpoint', required=False,
                         help='Checkpoint of model to load. Can also be output directory if the output directory only '
                              'contains a single checkpoint directory.')
+    parser.add_argument('--model_name_2', required=False, help='Second model name if multiple models are used for prediction')
+    parser.add_argument('--model_checkpoint_2', required=False, help='Second model name if multiple checkpoints are used for prediction')
     parser.add_argument('-H', '--hypothesis', required=False, help='A hypothesis for NLI-based prediction.')
     parser.add_argument('-d', '--dataset_token', action='store_true',
                         help='If dataset token should be used or not. Parent directory name of dataset is used as '

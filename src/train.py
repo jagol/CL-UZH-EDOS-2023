@@ -236,7 +236,7 @@ def main(args: argparse.Namespace) -> None:
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.training_set}')
     train_set = Dataset(name='trainset', path_to_dataset=args.training_set)
-    train_set.load(load_limit=args.limit_training_set)
+    train_set.load(load_limit=args.limit_training_set, filter_key=args.filter_key, filter_value=args.filter_value)
     if args.nli:
         train_set.add_hypotheses('Dummy hypothesis.')
     train_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
@@ -245,7 +245,7 @@ def main(args: argparse.Namespace) -> None:
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.validation_set}')
     eval_set = Dataset(name='eval_set', path_to_dataset=args.validation_set)
-    eval_set.load(load_limit=args.limit_validation_set)
+    eval_set.load(load_limit=args.limit_validation_set, filter_key=args.filter_key, filter_value=args.filter_value)
     if args.nli:
         train_set.add_hypotheses('Dummy hypothesis.')
     eval_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
@@ -298,6 +298,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--validation_set', help='Path to development set data file.')
     parser.add_argument('--limit_validation_set', type=int, default=None,
                         help='Only encode and use <limit_dataset> number of examples.')
+    parser.add_argument('--filter_key', required=False, help='If set, use this key to filter out instances from the data during loading.')
+    parser.add_argument('--filter_value', required=False, help='If set, use this value to filter out instances from the data during loading.')
 
     # hyperparams
     parser.add_argument('-E', '--epochs', type=float, default=5.0,

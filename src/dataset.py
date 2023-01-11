@@ -42,11 +42,17 @@ class Dataset(torch.utils.data.IterableDataset):
     def __len__(self) -> int:
         return len(self._items)
 
-    def load(self, load_limit: Optional[int] = None) -> None:
+    def load(self, load_limit: Optional[int] = None, filter_key: Optional[str] = None, 
+             filter_value: Union[str, int, None] = None) -> None:
         if self._path_to_dataset.endswith('.jsonl'):
             with open(self._path_to_dataset) as fin:
                 for i, line in enumerate(fin):
                     d = json.loads(line)
+                    if filter_key:
+                        if d[filter_key] == filter_value:
+                            continue
+                        else:
+                            d[filter_key] = d[filter_key] - 1
                     self._items.append(d)
                     if load_limit:
                         if i >= load_limit:
@@ -57,6 +63,11 @@ class Dataset(torch.utils.data.IterableDataset):
                 reader = csv.DictReader(fin)
                 for row in reader:
                     row['id'] = row['rewire_id']
+                    if filter_key:
+                        if row[filter_key] == filter_value:
+                            continue
+                        else:
+                            d[filter_key] = d[filter_key] - 1
                     self._items.append(row)
         
 

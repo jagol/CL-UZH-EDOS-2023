@@ -39,19 +39,31 @@ def get_predictions(items: Union[List[item_type], Dataset], threshold: Optional[
             pred_labels.append(to_int(item[pred_key], threshold=threshold))
             pred_probs.append(item[pred_key])
     elif isinstance(items[0][pred_key], list):
-        for item in items:
-            prob_distr = item[pred_key]
-            largest_index = torch.argmax(torch.FloatTensor(prob_distr)).item()
-            if threshold:
-                if prob_distr[largest_index] < threshold:
+        if isinstance(items[0][pred_key][1], list):
+            # staggered prediction (float, list of floats)
+            for item in items:
+                bin_pred, fine_grained_preds = item[pred_key]
+                if bin_pred > threshold:
+                    largest_index = torch.argmax(torch.FloatTensor(fine_grained_preds)).item()
+                    pred_labels.append(largest_index + 1)
+                    pred_probs.append(fine_grained_preds[largest_index])
+                else:
                     pred_labels.append(0)
                     pred_probs.append(None)
+        else:
+            for item in items:
+                prob_distr = item[pred_key]
+                largest_index = torch.argmax(torch.FloatTensor(prob_distr)).item()
+                if threshold:
+                    if prob_distr[largest_index] < threshold:
+                        pred_labels.append(0)
+                        pred_probs.append(None)
+                    else:
+                        pred_labels.append(largest_index)
+                        pred_probs.append(prob_distr[largest_index])
                 else:
                     pred_labels.append(largest_index)
                     pred_probs.append(prob_distr[largest_index])
-            else:
-                pred_labels.append(largest_index)
-                pred_probs.append(prob_distr[largest_index])
     return pred_labels, pred_probs
 
 
