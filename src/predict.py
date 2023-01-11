@@ -278,11 +278,11 @@ def get_model_checkpoint_path(model_checkpoint: Optional[str]) -> str:
     return model_checkpoint
 
 
-def get_predictor(args: argparse.Namespace, model_checkpoint: str, device: str) -> Predictor:
-    if args.predictor == 'StaggeredStandardPredictor':
+def get_predictor(args: argparse.Namespace, device: str) -> Predictor:
+    if args.predictor == 'StaggeredStandardPredictor' or 'StaggeredLabelDescStandardPredictor':
         model_checkpoint = get_model_checkpoint_path(args.model_checkpoint)
         model_checkpoint_2 = get_model_checkpoint_path(args.model_checkpoint_2)
-        predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=model_checkpoint, dataset_token=args.dataset_token,
+        predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=model_checkpoint, dataset_token_1=args.dataset_token,
                                                model_name_2=args.model_name_2, model_checkpoint_2=model_checkpoint_2, dataset_token_2=args.dataset_token_2,
                                                device=device)
     else:
@@ -298,6 +298,7 @@ PREDICTORS = {
     'TaskDescVectorPredictorMaxToBin': TaskDescVectorPredictorMaxToBin,
     'TaskDescVectorPredictor': TaskDescVectorPredictor,
     'StaggeredStandardPredictor': StaggeredStandardPredictor,
+    'StaggeredLabelDescStandardPredictor': StaggeredLabelDescStandardPredictor,
     'StandardPredictor': StandardPredictor
 }
 
@@ -357,14 +358,15 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--model_checkpoint', required=False,
                         help='Checkpoint of model to load. Can also be output directory if the output directory only '
                              'contains a single checkpoint directory.')
-    parser.add_argument('--model_name_2', required=False, help='Second model name if multiple models are used for prediction')
-    parser.add_argument('--model_checkpoint_2', required=False, help='Second model name if multiple checkpoints are used for prediction')
-    parser.add_argument('-H', '--hypothesis', required=False, help='A hypothesis for NLI-based prediction.')
     parser.add_argument('-d', '--dataset_token', action='store_true',
                         help='If dataset token should be used or not. Parent directory name of dataset is used as '
                              'dataset token.')
+    parser.add_argument('--model_name_2', required=False, help='Second model name if multiple models are used for prediction')
+    parser.add_argument('--model_checkpoint_2', required=False, help='Second model name if multiple checkpoints are used for prediction')
+    parser.add_argument('--dataset_token_2', action='store_true',
+                        help='If dataset token should be used or not. Parent directory name of dataset is used as '
+                             'dataset token.')
     parser.add_argument('--label_description', action='store_true', help='If true, use label_type as task description.')
-    parser.add_argument('--label_desc_category', action='store_true', help='Predict sexism categories')
     parser.add_argument('--predictor', choices=list(PREDICTORS.keys()))
     cmd_args = parser.parse_args()
     main(cmd_args)
