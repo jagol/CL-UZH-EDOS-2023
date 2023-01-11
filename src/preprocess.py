@@ -106,31 +106,6 @@ class DGHSDPreprocessor(Preprocessor):
         self.writer.write(std_entries, self.path_out)
 
 
-class SBFPreprocessor(Preprocessor):
-    
-    def process(self) -> None:
-        entries = self.loader.load(self.path_in)
-        std_entries = []
-        for entry in entries:
-            std_entry = dict(
-                    id=entry[''], 
-                    text=self.cleaner.clean(entry['post']), 
-                    label_type='offensive', 
-                    label_value=1 if float(entry['offensiveYN']) >= 0.5 else 0,
-                    source=self.corpus_name,
-            )
-            std_entries.append(std_entry)
-            std_entry = dict(
-                    id=entry[''], 
-                    text=self.cleaner.clean(entry['post']), 
-                    label_type='lewd', 
-                    label_value=1 if float(entry['sexYN']) >= 0.5 else 0,
-                    source=self.corpus_name,
-            )
-            std_entries.append(std_entry)
-        self.writer.write(std_entries, self.path_out)
-
-
 class MHSPreprocessor(Preprocessor):
     
     def process(self) -> None:
@@ -162,6 +137,49 @@ class MHSPreprocessor(Preprocessor):
             )
             std_entries.append(std_entry)
         self.writer.write(std_entries, self.path_out)
+
+
+class SBFPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['post']), 
+                    label_type='offensive', 
+                    label_value=1 if float(entry['offensiveYN']) >= 0.5 else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['post']), 
+                    label_type='lewd', 
+                    label_value=1 if float(entry['sexYN']) >= 0.5 else 0,
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
+
+class TWEPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry[''], 
+                    text=self.cleaner.clean(entry['text']), 
+                    label_type=entry['label_type'], 
+                    label_value=int(entry['label']),
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
 
 def shuffle_corpus(path: str) -> None:
     with open(path) as fin:
@@ -220,6 +238,7 @@ CORPUS_TO_Preprocessor = {
     # 'HateCheck': HateCheckPreprocessor,
     'MHS': MHSPreprocessor,
     'SBF': SBFPreprocessor,
+    'TWE': TWEPreprocessor,
 }
 
 
