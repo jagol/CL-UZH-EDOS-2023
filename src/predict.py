@@ -25,11 +25,12 @@ nli_results_type = Dict[str, Union[float, Dict[str, float]]]
 
 class Predictor:
 
-    def __init__(self, model_name: str, model_checkpoint: Optional[str], device: str) -> None:
+    def __init__(self, model_name: str, model_checkpoint: Optional[str], device: str, dataset_token: Optional[bool] = None) -> None:
         pred_logger.info('Initialize Predictor.')
         self._model_name = model_name
         self._model_checkpoint = model_checkpoint
         self._device = device
+        self._dataset_token = dataset_token
         pred_logger.info('Load tokenizer.')
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
         pred_logger.info(f'Load model {model_name} from checkpoint {model_checkpoint}.')
@@ -52,7 +53,11 @@ class StandardPredictor(Predictor):
         Return:
             List of class probabilities.
         """
-        encoded_input = Dataset.encode_item(self._tokenizer, text=input_text)
+        if self._dataset_token:
+            encoded_input = Dataset.encode_item_with_dataset_token(
+                self._tokenizer, text=input_text, source=self._dataset_token)
+        else:
+            encoded_input = Dataset.encode_item(self._tokenizer, text=input_text)
         logits = self._model(**encoded_input.to(self._device))[0]
         return torch.softmax(logits.squeeze(), dim=0).tolist()
     
@@ -68,14 +73,17 @@ class StandardPredictor(Predictor):
         return float(prob_distr[1])  # take the probability of the positive class
 
 
-class StaggeredStandardPredictor(Predictor):
+class StaggeredPredictor(Predictor):
     
-    def __init__(self, model_name_1: str, model_checkpoint_1: Optional[str], model_name_2: str, model_checkpoint_2: str, device: str) -> None:
+    def __init__(self, model_name_1: str, model_checkpoint_1: Optional[str], dataset_token_1: str, 
+                 model_name_2: str, model_checkpoint_2: str, dataset_token_2: str, device: str) -> None:
         pred_logger.info('Initialize Predictor.')
         self._model_name_1 = model_name_1
         self._model_checkpoint_1 = model_checkpoint_1
+        self._dataset_token_1 = dataset_token_1
         self._model_name_2 = model_name_2
         self._model_checkpoint_2 = model_checkpoint_2
+        self._dataset_token_2 = dataset_token_2
         self._device = device
         # model 1: binary decision
         pred_logger.info('Load tokenizer.')
@@ -100,6 +108,13 @@ class StaggeredStandardPredictor(Predictor):
     
     @torch.no_grad()
     def classify(self, input_text: str) -> Tuple[float, List[float]]:
+        raise NotImplementedError
+
+
+class StaggeredStandardPredictor(StaggeredPredictor):
+    
+    @torch.no_grad()
+    def classify(self, input_text: str) -> Tuple[float, List[float]]:
         """Perform generic classification (no nli), binary or multi-class.
 
         Args:
@@ -107,7 +122,16 @@ class StaggeredStandardPredictor(Predictor):
         Return:
             List of class probabilities.
         """
-        encoded_input_1 = Dataset.encode_item(self._tokenizer_1, text=input_text)
+        if self._dataset_token_1:
+            encoded_input_1 = Dataset.encode_item_with_dataset_token(
+                self._tokenizer_1, text=input_text, source=self._dataset_token_1)
+        else:
+            encoded_input_1 = Dataset.encode_item(self._tokenizer_1, text=input_text)
+        if self._dataset_token_2:
+            encoded_input_2 = Dataset.encode_item_with_dataset_token(
+                self._tokenizer_2, text=input_text, source=self._dataset_token_2)
+        else:
+            encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
         encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
         bin_pred_logits = self._model_1(**encoded_input_1.to(self._device))[0].squeeze()
         bin_pred_prob = torch.softmax(bin_pred_logits, dim=0)[1]
@@ -115,58 +139,34 @@ class StaggeredStandardPredictor(Predictor):
         return float(bin_pred_prob.item()), torch.softmax(fine_grained_logits.squeeze(), dim=0).tolist()
 
 
-class NLIPredictor(Predictor):
+class StaggeredLabelDescStandardPredictor(StaggeredPredictor):
+    
+    @torch.no_grad()
+    def classify(self, input_text: str, label_description: str) -> Tuple[float, List[float]]:
+        """Perform generic classification (no nli), binary or multi-class.
 
-    def __init__(self, model_name: str, model_checkpoint: Optional[str], device: str) -> None:
-        # default mapping of Sahajtomar/German_Zeroshot
-        self._entail_idx = 0
-        self._contra_idx = 2
-        super(NLIPredictor, self).__init__(model_name, model_checkpoint, device)
-
-    def classify(self, input_text: str, hypotheses: Union[str, List[str]]) -> Union[float, List[float]]:
-        if isinstance(hypotheses, str):
-            return self._classify_bin(input_text, hypotheses)
-        elif isinstance(hypotheses, list):
-            return self._classify_multi(input_text, hypotheses)
+        Args:
+            input_text: Text to be classified.
+        Return:
+            List of class probabilities.
+        """
+        if self._dataset_token_1:
+            encoded_input_1 = Dataset.encode_item_with_label_descriptions_and_dataset_token(
+                self._tokenizer_1, text=input_text, source=self._dataset_token_1, label_description=label_description)
         else:
-            raise Exception(f"'Hypotheses' should be either str or list. But it is '{type(hypotheses)}'")
-
-    @torch.no_grad()
-    def _classify_bin(self, input_text: str, hypothesis: str) -> float:
-        """Do binary NLI classification.
-
-        Args:
-            input_text: text to be classified/premise
-            hypothesis: one hypothesis
-        Return:
-            prob_entail: The probability of entailment, meaning
-                the prob. that the hypothesis is true.
-        """
-        encoded_input = Dataset.encode_item_with_hypotheses(self._tokenizer, text=input_text, hypothesis=hypothesis)
-        del encoded_input['token_type_ids']
-        logits = self._model(**encoded_input.to(self._device))[0]
-        contradiction_entail_logits = logits[0, [self._contra_idx, self._entail_idx]]  # 0-indexing assumes exactly one
-        # example
-        probs = contradiction_entail_logits.softmax(dim=0)
-        # dim=0 only because already extracted one example with a batch it would be dim=1.
-        prob_entail = probs[1].item()
-        return prob_entail
-
-    @torch.no_grad()
-    def _classify_multi(self, input_text: str, hypotheses: List[str]) -> List[float]:
-        """Do NLI classification for more than 2 classes.
-
-        This implies 2 or more hypotheses
-
-        Args:
-            input_text: text to be classified/premise
-            hypotheses: hypotheses
-        Return:
-            probs: probabilities corresponding to the hypotheses (same order)
-        """
-        probs_raw = [self._classify_bin(input_text, hypothesis) for hypothesis in hypotheses]
-        # return torch.nn.functional.softmax(torch.FloatTensor(probs_raw), dim=0).tolist()
-        return probs_raw
+            encoded_input_1 = Dataset.ncode_item_with_label_descriptions(
+                self._tokenizer_1, text=input_text, label_description=label_description)
+        if self._dataset_token_2:
+            encoded_input_2 = Dataset.encode_item_with_dataset_token(
+                self._tokenizer_2, text=input_text, source=self._dataset_token_2)
+        else:
+            encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
+        encoded_input_1 = Dataset.encode_item_with_label_descriptions(self._tokenizer_1, text=input_text)
+        encoded_input_2 = Dataset.encode_item(self._tokenizer_2, text=input_text)
+        bin_pred_logits = self._model_1(**encoded_input_1.to(self._device))[0].squeeze()
+        bin_pred_prob = torch.softmax(bin_pred_logits, dim=0)[1]
+        fine_grained_logits = self._model_2(**encoded_input_2.to(self._device))[0]
+        return float(bin_pred_prob.item()), torch.softmax(fine_grained_logits.squeeze(), dim=0).tolist()
 
 
 class TaskDescPredictor(Predictor):
@@ -192,8 +192,12 @@ class TaskDescPredictor(Predictor):
         Return:
             Probabilities of the positive class.
         """
-        encoded_input = Dataset.encode_item_with_label_descriptions(
-            self._tokenizer, text=input_text, label_description=label_description)
+        if self._dataset_token:
+            encoded_input = Dataset.encode_item_with_label_descriptions_and_dataset_token(
+                self._tokenizer, text=input_text, source=self._dataset_token , label_description=label_description)
+        else:
+            encoded_input = Dataset.encode_item_with_label_descriptions(
+                self._tokenizer, text=input_text, label_description=label_description)
         # del encoded_input['token_type_ids']
         logits = self._model(**encoded_input.to(self._device))[0]
         return self.logits_to_prob(logits)
@@ -291,10 +295,43 @@ class PredictionPipeline:
         return self._strategies[self._strategy](input_text)
 
 
+def get_model_checkpoint_path(model_checkpoint: Optional[str]) -> str:
+    """If path is not a model checkpoint, search for a checkpoint in the given directory."""
+    if model_checkpoint:
+        if not re.fullmatch(CHECKPOINT_REGEX, model_checkpoint.split('/')[-1]):
+            pred_logger.info(f'"{model_checkpoint}" is not a checkpoint. '
+                             f'Search for checkpoint in child directories.')
+            matches = [1 for name in os.listdir(model_checkpoint)
+                       if re.fullmatch(CHECKPOINT_REGEX, name) is not None]
+            if sum(matches) > 1:
+                raise Exception('Multiple checkpoints found.')
+            elif sum(matches) < 1:
+                raise Exception('No checkpoint found.')
+            for name in os.listdir(model_checkpoint):
+                if re.fullmatch(CHECKPOINT_REGEX, name):
+                    model_checkpoint = os.path.join(model_checkpoint, name)
+                    pred_logger.info(f'Found checkpoint "{name}", set checkpoint path to: {model_checkpoint}')
+    return model_checkpoint
+
+
+def get_predictor(args: argparse.Namespace, model_checkpoint: str, device: str) -> Predictor:
+    if args.path_strat_config:
+        predictor = PredictionPipeline(path_config=args.path_strat_config, device=device)
+    elif args.predictor == 'StaggeredStandardPredictor':
+        model_checkpoint = get_model_checkpoint_path(args.model_checkpoint)
+        model_checkpoint_2 = get_model_checkpoint_path(args.model_checkpoint_2)
+        predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=model_checkpoint, dataset_token=args.dataset_token,
+                                               model_name_2=args.model_name_2, model_checkpoint_2=model_checkpoint_2, dataset_token_2=args.dataset_token_2,
+                                               device=device)
+    else:
+        model_checkpoint = get_model_checkpoint_path(args.model_checkpoint)
+        predictor = PREDICTORS[args.predictor](model_name=args.model_name, model_checkpoint=model_checkpoint, 
+                                               device=device, dataset_token=args.dataset_token)
+    return predictor
+
+
 PREDICTORS = {
-    # 'Max3LLLabelDescPredictor': Max3LLLabelDescPredictor,
     'PredictionPipeline': PredictionPipeline,
-    'NLIPredictor': NLIPredictor,
     'TaskDescPredictor': TaskDescPredictor,
     'TaskDescCategoryPredictor': TaskDescCategoryPredictor,
     'TaskDescVectorPredictorMaxToBin': TaskDescVectorPredictorMaxToBin,
@@ -321,30 +358,9 @@ def main(args) -> None:
         eval_sets.append(dataset)
 
     device = f'cuda:{args.gpu}' if args.gpu >= 0 else 'cpu'
-    # if path is not a model checkpoint, search for a checkpoint in the given directory
-    if args.model_checkpoint:
-        if not re.fullmatch(CHECKPOINT_REGEX, args.model_checkpoint.split('/')[-1]):
-            pred_logger.info(f'"{args.model_checkpoint}" is not a checkpoint. '
-                             f'Search for checkpoint in child directories.')
-            matches = [1 for name in os.listdir(args.model_checkpoint)
-                       if re.fullmatch(CHECKPOINT_REGEX, name) is not None]
-            if sum(matches) > 1:
-                raise Exception('Multiple checkpoints found.')
-            elif sum(matches) < 1:
-                raise Exception('No checkpoint found.')
-            for name in os.listdir(args.model_checkpoint):
-                if re.fullmatch(CHECKPOINT_REGEX, name):
-                    args.model_checkpoint = os.path.join(args.model_checkpoint, name)
-                    pred_logger.info(f'Found checkpoint "{name}", set checkpoint path to: {args.model_checkpoint}')
+    predictor = get_predictor(args, device)
     # Load the correct predictor
-    if args.path_strat_config:
-        predictor = PredictionPipeline(path_config=args.path_strat_config, device=device)
-    elif args.predictor == 'StaggeredStandardPredictor':
-        predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=args.model_checkpoint, 
-                                               model_name_2=args.model_name_2, model_checkpoint_2=args.model_checkpoint_2, 
-                                               device=device)
-    else:
-        predictor = PREDICTORS[args.predictor](model_name=args.model_name, model_checkpoint=args.model_checkpoint, device=device)
+    
     pred_logger.info('Start prediction.')
     for i, eval_set in enumerate(eval_sets):
         eval_set_path, eval_set_fname = os.path.split(eval_set._path_to_dataset)
@@ -358,26 +374,13 @@ def main(args) -> None:
         for item in tqdm(eval_set):
             if args.path_strat_config:
                 item['prediction'] = predictor.classify(input_text=item['text'])
-            elif args.hypothesis:
-                if args.dataset_token:
-                    item['prediction'] = predictor.classify(
-                        input_text=item['text'], hypothesis=f"[{eval_set.name}] {args.hypothesis}")
-                else:
-                    item['prediction'] = predictor.classify(input_text=item['text'], hypotheses=args.hypothesis)
-            elif args.label_description  and args.predictor == 'TaskDescPredictor':
+            elif args.label_description and args.predictor == 'TaskDescPredictor':
                 # Only pass label_desc argument for the binary prediction done by TaskDescPredictor.
                 # Other Multi-label predictors that the label descriptions already saved internally.
-                if args.dataset_token:
-                    item['prediction'] = predictor.classify(input_text=item['text'], label_description=f"[{eval_set.name}] {item['label_desc']}")
-                else:
-                    item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
+                item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
             else:
                 # do standard classification
-                if args.dataset_token:
-                    item['prediction'] = predictor.classify(f"[{item['source']}] {item['text']}")
-                else:
-                    item['prediction'] = predictor.classify(input_text=item['text'])
-                # item['prediction_int'] = item['class_probs'].index(max(item['class_probs']))
+                item['prediction'] = predictor.classify(input_text=item['text'])
             fout.write(json.dumps(item, ensure_ascii=False) + '\n')
         fout.close()
     pred_logger.info('Finished prediction.')    
