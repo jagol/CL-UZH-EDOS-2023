@@ -106,6 +106,23 @@ class DGHSDPreprocessor(Preprocessor):
         self.writer.write(std_entries, self.path_out)
 
 
+class JigsawUBiTCPreprocessor(Preprocessor):
+    
+    def process(self) -> None:
+        entries = self.loader.load(self.path_in)
+        std_entries = []
+        for entry in entries:
+            std_entry = dict(
+                    id=entry['id'], 
+                    text=self.cleaner.clean(entry['comment_text']), 
+                    label_type=entry['label_type'], 
+                    label_value=int(entry['label_value']),
+                    source=self.corpus_name,
+            )
+            std_entries.append(std_entry)
+        self.writer.write(std_entries, self.path_out)
+
+
 class MHSPreprocessor(Preprocessor):
     
     def process(self) -> None:
@@ -234,8 +251,7 @@ CORPUS_TO_Preprocessor = {
     'EDOS2023TaskA': EDOS2023TaskAPreprocessor,
     'EDOS2023TaskB': EDOS2023TaskBPreprocessor,
     'EDOS2023TaskC': EDOS2023TaskCPreprocessor,
-    # 'JigsawUBiTC': JigsawUBiTCPreprocessor,
-    # 'HateCheck': HateCheckPreprocessor,
+    'JigsawUBiTC': JigsawUBiTCPreprocessor,
     'MHS': MHSPreprocessor,
     'SBF': SBFPreprocessor,
     'TWE': TWEPreprocessor,
