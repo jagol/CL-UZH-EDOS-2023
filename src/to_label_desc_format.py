@@ -11,6 +11,23 @@ from mappings import BIN_LABEL_NUM_TO_STR, CAT_LABEL_NUM_TO_STR, VEC_LABEL_NUM_T
 random.seed(42)
 
 
+JIGSAW_UBITC_LABEL_TYPES = ['funny_binary', 'wow_binary', 'sad_binary',
+    'likes_binary', 'disagree_binary', 'toxicity_binary',
+    'severe_toxicity_binary', 'obscene_binary', 'sexual_explicit_binary',
+    'identity_attack_binary', 'insult_binary', 'threat_binary',
+    'male_binary', 'female_binary', 'transgender_binary',
+    'other_gender_binary', 'heterosexual_binary',
+    'homosexual_gay_or_lesbian_binary', 'bisexual_binary',
+    'other_sexual_orientation_binary', 'christian_binary', 'jewish_binary',
+    'muslim_binary', 'hindu_binary', 'buddhist_binary', 'atheist_binary',
+    'other_religion_binary', 'black_binary', 'white_binary', 'asian_binary',
+    'latino_binary', 'other_race_or_ethnicity_binary',
+    'physical_disability_binary',
+    'intellectual_or_learning_disability_binary',
+    'psychiatric_or_mental_illness_binary', 'other_disability_binary'
+]
+
+
 def strip_numbering(label: str) -> str:
     if '.' in label.split(' ')[0]:
         return ' '.join(label.split(' ')[1:])
@@ -199,6 +216,9 @@ def to_label_desc_format(dataset: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     emo_idx = random.choice([0, 1, 2])
                     desc_item['label_desc'] = f'emotion: {emotions[emo_idx]}'
                     desc_item['label_value'] = 0
+        # JigsawUBiTC
+        elif item['label_type'] in JIGSAW_UBITC_LABEL_TYPES:
+            desc_item['label_desc'] = ' '.join(item['label_type'].split('_')[:-1])
         else:
             raise Exception(f"Unexpected label type: {item['label_type']}")
         dataset_label_desc.append(desc_item)
