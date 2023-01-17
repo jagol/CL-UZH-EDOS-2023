@@ -279,7 +279,7 @@ def get_model_checkpoint_path(model_checkpoint: Optional[str]) -> str:
 
 
 def get_predictor(args: argparse.Namespace, device: str) -> Predictor:
-    if args.predictor == 'StaggeredStandardPredictor' or 'StaggeredLabelDescStandardPredictor':
+    if args.predictor == 'StaggeredStandardPredictor' or args.predictor == 'StaggeredLabelDescStandardPredictor':
         model_checkpoint = get_model_checkpoint_path(args.model_checkpoint)
         model_checkpoint_2 = get_model_checkpoint_path(args.model_checkpoint_2)
         predictor = StaggeredStandardPredictor(model_name_1=args.model_name, model_checkpoint_1=model_checkpoint, dataset_token_1=args.dataset_token,
