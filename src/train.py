@@ -92,47 +92,6 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
     TRAIN_LOGGER.info('Finished training.')
 
 
-def search_hyperparams(train_set: Dataset, dev_set: Dataset, model_init,
-                       tokenizer: AutoTokenizer, args: argparse.Namespace) -> None:
-    TRAIN_LOGGER.info('Instantiate training args.')
-    training_args = TrainingArguments(
-        num_train_epochs=args.epochs,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.gradient_accumulation,
-        output_dir=args.path_out_dir,
-        logging_dir=args.path_out_dir,
-        logging_steps=args.log_interval,
-        save_strategy=args.save_strategy,
-        # debugging settings:
-        # save_strategy='steps',
-        save_steps=args.save_steps,
-        learning_rate=args.learning_rate,
-        evaluation_strategy=args.evaluation_strategy,
-        eval_steps=args.eval_steps,
-        # report_to="wandb",
-    )
-    TRAIN_LOGGER.info('Instantiate trainer.')
-    trainer = Trainer(
-        model_init=model_init,
-        tokenizer=tokenizer,
-        args=training_args,
-        train_dataset=train_set,
-        eval_dataset=dev_set,
-        compute_metrics=compute_metrics,
-        callbacks = [EarlyStoppingCallback(early_stopping_patience=args.patience)]
-    )
-    TRAIN_LOGGER.info('Start hyperparameter search.')
-    best_run = trainer.hyperparameter_search(
-        direction="maximize",
-        backend="ray",
-        n_trials=3
-    )
-    TRAIN_LOGGER.info('Finished hyperparameter search.')
-    with open(os.path.join(args.path_out_dir, 'hyperparameter_search_results.json')) as fout:
-        json.dump(best_run.__dict__, fout)
-
-
 def compute_metrics(eval_pred) -> Dict[str, float]:
     logits, labels = eval_pred
     if isinstance(logits, tuple):
@@ -239,16 +198,9 @@ def main(args: argparse.Namespace) -> None:
     model_to_load = args.checkpoint if args.checkpoint else args.model_name
     TRAIN_LOGGER.info(f'Load Model from: {model_to_load}')
 
-    if args.search_hyperparams:
-        TRAIN_LOGGER.info(f'Start hyperparameter search with {model_to_load} and num output labels = 2.')
-
-        def model_init():
-            return AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=2, return_dict=True)
-        search_hyperparams(train_set, eval_set, model_init, tokenizer, args)
-    else:
-        TRAIN_LOGGER.info(f'Set output layer to dimensionality: {args.num_labels}')
-        model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels, ignore_mismatched_sizes=True)
-        train(train_set, eval_set, model, tokenizer, args)
+    TRAIN_LOGGER.info(f'Set output layer to dimensionality: {args.num_labels}')
+    model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels, ignore_mismatched_sizes=True)
+    train(train_set, eval_set, model, tokenizer, args)
 
 
 if __name__ == '__main__':
@@ -262,8 +214,6 @@ if __name__ == '__main__':
                              'load the correct tokenizer.')
     parser.add_argument('-c', '--checkpoint', required=False,
                         help='Optional: provide checkpoint.')
-    parser.add_argument('-s', '--search_hyperparams', action='store_true',
-                        help='If used, optimize hyperparameters instead of standard training.')
     parser.add_argument('--no_cuda', action='store_true', help='Tell Trainer to not use cuda.')
 
     # task formulation
