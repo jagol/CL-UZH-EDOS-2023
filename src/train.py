@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import random
-from typing import Optional, Dict, List, Any
+from typing import Optional, Dict, List, Any, Union, NewType
 
 import numpy as np
 import sklearn
@@ -10,17 +10,26 @@ import torch
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments, Trainer, AutoTokenizer, 
-    EarlyStoppingCallback, 
+    EarlyStoppingCallback, DataCollator,
     AutoModelForSequenceClassification, AutoTokenizer
 )
+from transformers import default_data_collator
+from transformers.data.data_collator import DataCollatorMixin
+from transformers.tokenization_utils_base import BatchEncoding
 import wandb
 
+from dataclasses import dataclass
 from dataset import Dataset
 from get_loggers import get_logger
+from to_label_desc_format import batch_to_label_desc
+from dataset import encode_items
 
 
 # transformers.logging.set_verbosity_info()
 TRAIN_LOGGER = None
+TOKENIZER = None
+MAX_SEQ_LENGTH = 512
+DATASET_TOKEN = None
 if TRAIN_LOGGER is None:
     TRAIN_LOGGER = get_logger('train')
 eval_set: Optional[Dataset] = None
@@ -49,12 +58,44 @@ def map_ternary_labels_to_binary(ternary_labels) -> List[int]:
             out_labels.append(1)
     return out_labels
 
+# adjusted from: https://huggingface.co/transformers/v4.8.0/_modules/transformers/data/data_collator.html
+InputDataClass = NewType("InputDataClass", Any)
+def label_desc_datacollator(features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
+    """
+    Very simple data collator that simply collates batches of dict-like objects and performs special handling for
+    potential keys named:
+
+        - ``label``: handles a single value (int or float) per object
+        - ``label_ids``: handles a list of values per object
+
+    Does not do any additional preprocessing: property names of the input object will be used as corresponding inputs
+    to the model. See glue and ner for example of how it's useful.
+    """
+    texts = [d['input_ids']['text'] for d in features]
+    label_types = [d['input_ids']['label_type'] for d in features]
+    label_values = [d['input_ids']['label_value'] for d in features]
+    sources = [d['input_ids']['source'] for d in features]
+    binary_labels, label_descs = batch_to_label_desc(sources, label_types, label_values)
+    if DATASET_TOKEN:
+        ds_label_descs = []
+        for source, label_desc in zip(sources, label_descs):
+            ds_label_descs.append(f'[{source}] {label_desc}')
+    else:
+        ds_label_descs = label_descs
+    enc_batch = TOKENIZER(
+        text=ds_label_descs, 
+        text_pair=texts,
+        padding='longest',
+        max_length=MAX_SEQ_LENGTH, 
+        pad_to_multiple_of=2, 
+        return_tensors='pt'
+    )
+    enc_batch['labels'] = torch.LongTensor(binary_labels)
+    return enc_batch
+
 
 def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClassification,
           tokenizer: AutoTokenizer, args: argparse.Namespace) -> None:
-    # for batch in train_set:
-    #     break
-    # print({k: v.shape for k, v in batch.items()})
     TRAIN_LOGGER.info('Instantiate training args.')
     training_args = TrainingArguments(
         num_train_epochs=args.epochs,
@@ -82,6 +123,7 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         model=model,
         tokenizer=tokenizer,
         args=training_args,
+        data_collator=label_desc_datacollator if args.label_desc_datacollator else default_data_collator,
         train_dataset=train_set,
         eval_dataset=dev_set,
         compute_metrics=compute_metrics,
@@ -145,6 +187,8 @@ def main(args: argparse.Namespace) -> None:
         TRAIN_LOGGER = get_logger('train')
     global eval_set
     global main_args
+    global DATASET_TOKEN
+    DATASET_TOKEN = args.dataset_token
     main_args = args
 
     if args.wandb:
@@ -180,27 +224,28 @@ def main(args: argparse.Namespace) -> None:
     for k, v in args.__dict__.items():
         TRAIN_LOGGER.info(f'"{k}": "{v}"')
     TRAIN_LOGGER.info(f'Load tokenizer: {args.model_name}')
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    global TOKENIZER
+    TOKENIZER = AutoTokenizer.from_pretrained(args.model_name)
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.training_set}')
     train_set = Dataset(name='trainset', path_to_dataset=args.training_set)
     train_set.load(load_limit=args.limit_training_set, filter_key=args.filter_key, filter_value=args.filter_value)
-    train_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
-                             label_description=args.label_description)
-    ensure_valid_encoding(train_set)
+    # train_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
+    #                          label_description=args.label_description)
+    # ensure_valid_encoding(train_set)
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.validation_set}')
     eval_set = Dataset(name='eval_set', path_to_dataset=args.validation_set)
     eval_set.load(load_limit=args.limit_validation_set, filter_key=args.filter_key, filter_value=args.filter_value)
-    eval_set.encode_dataset(tokenizer=tokenizer, dataset_token=args.dataset_token,
-                            label_description=args.label_description)
+    # eval_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
+    #                         label_description=args.label_description)
 
     model_to_load = args.checkpoint if args.checkpoint else args.model_name
     TRAIN_LOGGER.info(f'Load Model from: {model_to_load}')
 
     TRAIN_LOGGER.info(f'Set output layer to dimensionality: {args.num_labels}')
     model = AutoModelForSequenceClassification.from_pretrained(model_to_load, num_labels=args.num_labels, ignore_mismatched_sizes=True)
-    train(train_set, eval_set, model, tokenizer, args)
+    train(train_set, eval_set, model, TOKENIZER, args)
 
 
 if __name__ == '__main__':
@@ -230,6 +275,8 @@ if __name__ == '__main__':
                         help='Only encode and use <limit_dataset> number of examples.')
     parser.add_argument('--filter_key', required=False, help='If set, use this key to filter out instances from the data during loading.')
     parser.add_argument('--filter_value', required=False, help='If set, use this value to filter out instances from the data during loading.')
+    parser.add_argument('--label_desc_datacollator', action='store_true', 
+                        help='Use the label_desc_datacollator instead of the default datacollator.')
 
     # hyperparams
     parser.add_argument('-E', '--epochs', type=float, default=5.0,

@@ -2,10 +2,11 @@ import argparse
 import csv
 import json
 import random
-from typing import Any, Dict, List
+from random import choice
+from typing import Any, Dict, List, Tuple
 
 import compute_corpus_stats
-from mappings import BIN_LABEL_NUM_TO_STR, CAT_LABEL_NUM_TO_STR, VEC_LABEL_NUM_TO_STR
+from mappings import BIN_LABEL_NUM_TO_STR, CAT_LABEL_NUM_TO_STR, VEC_LABEL_NUM_TO_STR, GLOBAL_LABEL_MAPPING
 
 
 random.seed(42)
@@ -54,6 +55,32 @@ def write_dataset_to_file(dataset: List[Dict[str, Any]], fpath: str) -> None:
     with open(fpath, 'w') as fout:
         for item in dataset:
             fout.write(json.dumps(item) + '\n')
+
+
+def batch_to_label_desc(sources: List[str], label_types: List[str], label_values: List[str]) -> Tuple[List[str], List[str]]:
+    binary_labels = []
+    label_descs = []
+    for source, label_type, label_value in zip(sources, label_types, label_values):
+        binary_label, label_desc = to_label_desc(source, label_type, label_value)
+        binary_labels.append(binary_label)
+        label_descs.append(label_desc)
+    return binary_labels, label_descs
+
+
+def to_label_desc(source: str, label_type: str, label_value: str) -> Tuple[int, str]:
+    if len(GLOBAL_LABEL_MAPPING[source][label_type]) <= 2:
+        return label_value, GLOBAL_LABEL_MAPPING[source][label_type][label_value]
+    # if there are more than 2 classes decide randomly if pos or neg example
+    if choice([True, False]):
+        # create a positive example
+        return 1, GLOBAL_LABEL_MAPPING[source][label_type][label_value]
+    else:
+        # create a negative example
+        num_labels = len(GLOBAL_LABEL_MAPPING[source][label_type])
+        label_values = list(range(num_labels))
+        label_values.remove(label_value)  # remove correct label
+        wrong_label_value = choice(label_values)
+        return 0, GLOBAL_LABEL_MAPPING[source][label_type][wrong_label_value]
 
 
 def to_label_desc_format(dataset: List[Dict[str, Any]]) -> List[Dict[str, Any]]:

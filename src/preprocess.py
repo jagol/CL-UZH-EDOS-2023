@@ -17,6 +17,9 @@ random.seed(42)
 prepro_logger = get_logger('preprocessor')
 
 
+SKIP_TASK_BC_NONES = None
+
+
 class Preprocessor:
     """Standardize dataset-format and clean text."""
     
@@ -61,11 +64,15 @@ class EDOS2023TaskBPreprocessor(Preprocessor):
         entries = self.loader.load(self.path_in)
         std_entries = []
         for entry in entries:
+            if SKIP_TASK_BC_NONES:
+                if 'label_category' in entry:
+                    if entry['label_category'] == 'none':
+                        continue
             std_entry = dict(
                     id=entry['rewire_id'], 
                     text=self.cleaner.clean(entry['text']), 
                     label_type='task_B', 
-                    label_value=LABEL_STR_TO_LABEL_NUM[entry['label_category']] if 'label_sexist' in entry else None,
+                    label_value=LABEL_STR_TO_LABEL_NUM[entry['label_category']] if 'label_category' in entry else None,
                     source=self.corpus_name,
                 )
             std_entries.append(std_entry)
@@ -78,11 +85,15 @@ class EDOS2023TaskCPreprocessor(Preprocessor):
         entries = self.loader.load(self.path_in)
         std_entries = []
         for entry in entries:
+            if SKIP_TASK_BC_NONES:
+                if 'label_vector' in entry:
+                    if entry['label_vector'] == 'none':
+                        continue
             std_entry = dict(
                     id=entry['rewire_id'], 
                     text=self.cleaner.clean(entry['text']), 
                     label_type='task_C', 
-                    label_value=LABEL_STR_TO_LABEL_NUM[entry['label_vector']] if 'label_sexist' in entry else None,
+                    label_value=LABEL_STR_TO_LABEL_NUM[entry['label_vector']] if 'label_vector' in entry else None,
                     source=self.corpus_name,
                 )
             std_entries.append(std_entry)
@@ -230,6 +241,8 @@ def sanity_check(fpath: str) -> None:
 
 
 def main(args: argparse.Namespace) -> None:
+    global SKIP_TASK_BC_NONES
+    SKIP_TASK_BC_NONES = args.skip_task_bc_nones
     processor = CORPUS_TO_Preprocessor[args.corpus](
         args.path_in, 
         args.path_out, 
@@ -268,5 +281,7 @@ if __name__ == '__main__':
     parser.add_argument('--sanity_check', action='store_true')
     parser.add_argument('--shuffle', action='store_true')
     parser.add_argument('--corpus_stats', action='store_true')
+    parser.add_argument('--skip_task_bc_nones', action='store_true', 
+                        help='Skip None values in EDOS Task B and C to generate a corpus optimized for tasks B and C.')
     cmd_args = parser.parse_args()
     main(cmd_args)

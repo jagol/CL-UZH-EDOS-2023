@@ -30,13 +30,23 @@ class Dataset(torch.utils.data.IterableDataset):
     def __iter__(self) -> None:
         for item in self._items:
             if 'input_ids' in item:
-                try:
-                    yield {'input_ids': item['input_ids'], 'token_type_ids': item['token_type_ids'],
-                           'attention_mask': item['attention_mask'], 'labels': item['labels']}
-                except KeyError:
-                    yield {'input_ids': item['input_ids'], 'attention_mask': item['attention_mask'],
-                           'labels': item['labels']}
+                if isinstance('input_ids', torch.Tensor):    
+                    try:
+                        yield {'input_ids': item['input_ids'], 'token_type_ids': item['token_type_ids'],
+                            'attention_mask': item['attention_mask'], 'labels': item['labels']}
+                    except KeyError:
+                        try:
+                            yield {'input_ids': item['input_ids'], 'attention_mask': item['attention_mask'],
+                                'labels': item['labels']}
+                        except:
+                            import pdb; pdb.set_trace()
+                yield item
             else:
+                item['input_ids'] = {}
+                for key in item:
+                    if key == 'input_ids':
+                        continue
+                    item['input_ids'][key] = item[key]
                 yield item
 
     def __len__(self) -> int:
@@ -139,3 +149,6 @@ class Dataset(torch.utils.data.IterableDataset):
                                                              ) -> Dict[str, Any]:
         return tokenizer(text=f'[{source}] {label_description}', text_pair=text, return_tensors='pt',
                          truncation=True, padding=True, return_token_type_ids=True)
+
+def encode_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    pass
