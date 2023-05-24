@@ -1,0 +1,193 @@
+[
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/EDOS2023/train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_full_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_full_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_full_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/EDOS2023/train_full_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl"
+        ],
+        "path_out": "data/EDOS2023/dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_official_preprocessed.jsonl"
+        ],
+        "path_out": "data/EDOS2023/dev_official_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_test_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_test_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_test_preprocessed.jsonl"
+        ],
+        "path_out": "data/EDOS2023/test_preprocessed.jsonl",
+        "shuffle": true
+    },
+
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    },
+
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_dev_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    },
+
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_train_preprocessed.jsonl",
+            "data/MHS/MHS_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+            "data/MHS/MHS_dev_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_train_preprocessed.jsonl",
+            "data/MHS/MHS_train_preprocessed.jsonl",
+            "data/TWE/TWE_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_TWE_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_full_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_full_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_full_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_train_preprocessed.jsonl",
+            "data/MHS/MHS_train_preprocessed.jsonl",
+            "data/TWE/TWE_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_full_DGHSD_SBF_MHS_TWE_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+            "data/MHS/MHS_dev_preprocessed.jsonl",
+            "data/TWE/TWE_dev_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_TWE_dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_official_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+            "data/MHS/MHS_dev_preprocessed.jsonl",
+            "data/TWE/TWE_dev_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_TWE_dev_official_preprocessed.jsonl",
+        "shuffle": true
+    },
+
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+            "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+            "data/SBF/SBF_train_preprocessed.jsonl",
+            "data/MHS/MHS_train_preprocessed.jsonl",
+            "data/TWE/TWE_train_preprocessed.jsonl",
+            "data/JigsawUBiTC/JigsawUBiTC_train_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_TWE_Jig_train_preprocessed.jsonl",
+        "shuffle": true
+    },
+    {
+        "paths_in": [
+            "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+            "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+            "data/MHS/MHS_dev_preprocessed.jsonl",
+            "data/TWE/TWE_dev_preprocessed.jsonl",
+            "data/JigsawUBiTC/JigsawUBiTC_dev_preprocessed.jsonl"
+        ],
+        "path_out": "data/main/EDOS2023TASK_ABC_DGHSD_SBF_MHS_TWE_Jig_dev_internal_preprocessed.jsonl",
+        "shuffle": true
+    }
+]

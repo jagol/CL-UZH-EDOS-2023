@@ -1,0 +1,1 @@
+python3 src/exec_prepro_pipeline.py -j configs/prepro/join_data_label_configs.json -s configs/prepro/split_configs.json -e configs/prepro/split_edos_configs.json -p configs/prepro/prepro_configs.json -m configs/prepro/merge_configs.json -d configs/prepro/label_desc_configs.json
