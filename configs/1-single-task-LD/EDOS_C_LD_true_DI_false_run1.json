@@ -1,0 +1,84 @@
+{
+    "meta":{
+        "method_name": "EDOS_C_LD_true_DI_false",
+        "task formulation": "Vanilla fine-tuning and testing on Task C.",
+        "training data": "Task C data.",
+        "model": "DeBertaV3-large",
+        "training procedure": null
+    },
+    "train":{
+        "experiment_name": "EDOS_C_LD_true_DI_false",
+        "run_name": "EDOS_C_LD_true_DI_false_run1",
+        "path_out_dir": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/",
+        "model_name": "microsoft/deberta-v3-large",
+        "checkpoint": null,
+        "search_hyperparams": false,
+        "no_cuda": false,
+        "label_description": true,
+        "dataset_token": false,
+        "num_labels":11,
+        "training_set":"data/EDOS2023TaskC/TaskC_full_train_preprocessed.jsonl",
+        "limit_training_set": null,
+        "validation_set":"data/EDOS2023TaskC/TaskC_dev_official_preprocessed.jsonl",
+        "limit_validation_set": null,
+        "filter_key": null,
+        "filter_value": null,
+        "label_desc_datacollator": true,
+        "epochs": 10,
+        "patience": 3,
+        "batch_size": 2,
+        "gradient_accumulation": 16,
+        "learning_rate": 1e-6,
+        "warmup_steps": 1000,
+        "add_info": false,
+        "log_interval":10,
+        "evaluation_strategy": "epoch",
+        "eval_steps": null,
+        "eval_accumulation_steps": 32,
+        "save_strategy": "epoch",
+        "save_steps": null,
+        "seed":1,
+        "wandb": true
+    },
+    "delete_checkpoints":{
+        "path_out_dir": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/"
+    },
+    "predict":{
+        "gpu": 0,
+        "path_out_dir": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/predictions",
+        "eval_set_paths": [
+            "data/EDOS2023TaskC/TaskC_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskC/TaskC_full_test_preprocessed.jsonl"
+        ],
+        "fnames_out": null,
+        "predictor": "TaskDescVectorPredictor",
+        "model_name": "microsoft/deberta-v3-large",
+        "model_checkpoint": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/",
+        "dataset_token": false,
+        "label_description": true,
+        "model_name_2": null,
+        "model_checkpoint_2": null
+    },
+
+    "evaluate_predictions_dev": {
+        "path_predictions": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/predictions/TaskC_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskC",
+        "out_path": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/predictions/TaskC_dev_official_preprocessed_metrics.json",
+        "threshold": null,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+
+    "evaluate_predictions_test": {
+        "path_predictions": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/predictions/TaskC_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskC",
+        "out_path": "output/EDOS_C_LD_true_DI_false/EDOS_C_LD_true_DI_false_run1/predictions/TaskC_full_test_preprocessed_metrics.json",
+        "threshold": null,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    }
+}

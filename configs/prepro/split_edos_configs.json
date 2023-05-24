@@ -1,0 +1,10 @@
+[
+    {
+        "path_in": "data/EDOS2023/edos_labelled.csv",
+        "path_train": "data/EDOS2023/edos_full_train.csv",
+        "path_dev": "data/EDOS2023/edos_full_dev.csv",
+        "path_test": "data/EDOS2023/edos_full_test.csv",
+        "loader": "CSVLoader",
+        "writer": "CSVWriter"    
+    }
+]

@@ -1,0 +1,164 @@
+{
+    "meta":{
+        "method_name": "EDOS_A_LD_true_DI_false",
+        "task formulation": "Vanilla fine-tuning and testing on Task A.",
+        "training data": "Task A data.",
+        "model": "DeBertaV3-large",
+        "training procedure": null
+    },
+    "train":{
+        "experiment_name": "EDOS_A_LD_true_DI_false",
+        "run_name": "EDOS_A_LD_true_DI_false_run2",
+        "path_out_dir": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/",
+        "model_name": "microsoft/deberta-v3-large",
+        "checkpoint": null,
+        "search_hyperparams": false,
+        "no_cuda": false,
+        "label_description": true,
+        "dataset_token": false,
+        "num_labels":2,
+        "training_set":"data/EDOS2023TaskA/TaskA_full_train_preprocessed.jsonl",
+        "limit_training_set": null,
+        "validation_set":"data/EDOS2023TaskA/TaskA_dev_official_preprocessed.jsonl",
+        "limit_validation_set": null,
+        "filter_key": null,
+        "filter_value": null,
+        "label_desc_datacollator": true,
+        "epochs": 10,
+        "patience": 3,
+        "batch_size": 2,
+        "gradient_accumulation": 16,
+        "learning_rate": 1e-6,
+        "warmup_steps": 1000,
+        "add_info": false,
+        "log_interval":10,
+        "evaluation_strategy": "epoch",
+        "eval_steps": null,
+        "eval_accumulation_steps": 32,
+        "save_strategy": "epoch",
+        "save_steps": null,
+        "seed":2,
+        "wandb": true
+    },
+    "delete_checkpoints":{
+        "path_out_dir": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/"
+    },
+    "predict":{
+        "gpu": 0,
+        "path_out_dir": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions",
+        "eval_set_paths": [
+            "data/EDOS2023TaskA/TaskA_dev_official_preprocessed.jsonl",
+            "data/EDOS2023TaskA/TaskA_full_test_preprocessed.jsonl"
+        ],
+        "fnames_out": null,
+        "predictor": "TaskDescPredictor",
+        "model_name": "microsoft/deberta-v3-large",
+        "model_checkpoint": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/",
+        "dataset_token": false,
+        "label_description": true,
+        "model_name_2": null,
+        "model_checkpoint_2": null
+    },
+
+    "evaluate_predictions_dev_0.5": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed_metrics_0.5.json",
+        "threshold": 0.5,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_dev_0.6": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed_metrics_0.6.json",
+        "threshold": 0.6,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_dev_0.7": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed_metrics_0.7.json",
+        "threshold": 0.7,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_dev_0.8": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed_metrics_0.8.json",
+        "threshold": 0.8,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_dev_0.9": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_dev_official_preprocessed_metrics_0.9.json",
+        "threshold": 0.9,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+
+    "evaluate_predictions_test_0.5": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed_metrics_0.5.json",
+        "threshold": 0.5,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_test_0.6": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed_metrics_0.6.json",
+        "threshold": 0.6,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_test_0.7": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed_metrics_0.7.json",
+        "threshold": 0.7,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_test_0.8": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed_metrics_0.8.json",
+        "threshold": 0.8,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    },
+    "evaluate_predictions_test_0.9": {
+        "path_predictions": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed.jsonl",
+        "path_labels": null,
+        "evalset_name": "EDOS2023TaskA",
+        "out_path": "output/EDOS_A_LD_true_DI_false/EDOS_A_LD_true_DI_false_run2/predictions/TaskA_full_test_preprocessed_metrics_0.9.json",
+        "threshold": 0.9,
+        "pred_key": "prediction",
+        "label_key": "label_value",
+        "write_false_preds": true
+    }
+}
