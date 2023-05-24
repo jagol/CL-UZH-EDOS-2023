@@ -1,0 +1,42 @@
+[
+    {
+        "path_in": "data/EDOS2023/train_all_tasks.csv",
+        "path_out_a": "data/EDOS2023/train_all_tasks_preprocessed.csv",
+        "path_out_b": "data/EDOS2023/dev_internal_all_tasks_preprocessed.csv",
+        "num_a": 12000,
+        "ratio": null,
+        "loader": "CSVLoader",
+        "writer": "CSVWriter",
+        "random_seed": 5
+    },
+    {
+        "path_in": "data/MHS/mhs_relevant_columns.csv",
+        "path_out_a": "data/MHS/mhs_train.csv",
+        "path_out_b": "data/MHS/mhs_eval.csv",
+        "num_a": 130000,
+        "ratio": null,
+        "loader": "CSVLoader",
+        "writer": "CSVWriter",
+        "random_seed": 5
+    },
+    {
+        "path_in": "data/MHS/mhs_eval.csv",
+        "path_out_a": "data/MHS/mhs_dev.csv",
+        "path_out_b": "data/MHS/mhs_test.csv",
+        "num_a": 2000,
+        "ratio": null,
+        "loader": "CSVLoader",
+        "writer": "CSVWriter",
+        "random_seed": 5
+    },
+    {
+        "path_in": "data/JigsawUBiTC/balanced_extract_all_atts.csv",
+        "path_out_a": "data/JigsawUBiTC/JigsawUBiTC_train.csv",
+        "path_out_b": "data/JigsawUBiTC/JigsawUBiTC_dev.csv",
+        "num_a": 1320638,
+        "ratio": null,
+        "loader": "CSVLoader",
+        "writer": "CSVWriter",
+        "random_seed": 5
+    }
+]

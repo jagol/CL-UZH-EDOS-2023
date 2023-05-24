@@ -1,0 +1,20 @@
+[
+    {
+        "texts": "data/EDOS2023TaskA/dev_task_a_entries.csv",
+        "labels": "data/EDOS2023TaskA/dev_task_a_labels.csv",
+        "output": "data/EDOS2023TaskA/dev_task_a_entries_labels.csv",
+        "name_label": "label_sexist"
+    },
+    {
+        "texts": "data/EDOS2023TaskB/dev_task_b_entries.csv",
+        "labels": "data/EDOS2023TaskB/dev_task_b_labels.csv",
+        "output": "data/EDOS2023TaskB/dev_task_b_entries_labels.csv",
+        "name_label": "label_category"
+    },
+    {
+        "texts": "data/EDOS2023TaskC/dev_task_c_entries.csv",
+        "labels": "data/EDOS2023TaskC/dev_task_c_labels.csv",
+        "output": "data/EDOS2023TaskC/dev_task_c_entries_labels.csv",
+        "name_label": "label_vector"
+    }
+]

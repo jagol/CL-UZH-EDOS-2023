@@ -29,14 +29,28 @@ class Dataset(torch.utils.data.IterableDataset):
 
     def __iter__(self) -> None:
         for item in self._items:
+            if 'label_value' in item and item['label_value'] == -1:
+                import pdb; pdb.set_trace()
+            if 'labels' in item and item['labels'] == -1:
+                import pdb; pdb.set_trace()
             if 'input_ids' in item:
-                try:
-                    yield {'input_ids': item['input_ids'], 'token_type_ids': item['token_type_ids'],
-                           'attention_mask': item['attention_mask'], 'labels': item['labels']}
-                except KeyError:
-                    yield {'input_ids': item['input_ids'], 'attention_mask': item['attention_mask'],
-                           'labels': item['labels']}
+                if isinstance('input_ids', torch.Tensor):    
+                    try:
+                        yield {'input_ids': item['input_ids'], 'token_type_ids': item['token_type_ids'],
+                            'attention_mask': item['attention_mask'], 'labels': item['labels']}
+                    except KeyError:
+                        try:
+                            yield {'input_ids': item['input_ids'], 'attention_mask': item['attention_mask'],
+                                'labels': item['labels']}
+                        except:
+                            import pdb; pdb.set_trace()
+                yield item
             else:
+                item['input_ids'] = {}
+                for key in item:
+                    if key == 'input_ids':
+                        continue
+                    item['input_ids'][key] = item[key]
                 yield item
 
     def __len__(self) -> int:
@@ -52,8 +66,11 @@ class Dataset(torch.utils.data.IterableDataset):
                         if d[filter_key] == filter_value:
                             continue
                         else:
-                            d[filter_key] = d[filter_key] - 1
+                            pass
+                            # d[filter_key] = d[filter_key] - 1
                     self._items.append(d)
+                    if d['label_value'] == -1:
+                        import pdb; pdb.set_trace()
                     if load_limit:
                         if i >= load_limit:
                             ds_logger.info(f'Stop dataset loading due to load_limit at {load_limit} items.')
@@ -69,7 +86,7 @@ class Dataset(torch.utils.data.IterableDataset):
                         else:
                             d[filter_key] = d[filter_key] - 1
                     self._items.append(row)
-        
+
 
     def add_hypotheses(self, hypothesis: str, augmentation: bool = False) -> None:
         """Add hypotheses and do hypothesis-augmentation."""
@@ -139,3 +156,6 @@ class Dataset(torch.utils.data.IterableDataset):
                                                              ) -> Dict[str, Any]:
         return tokenizer(text=f'[{source}] {label_description}', text_pair=text, return_tensors='pt',
                          truncation=True, padding=True, return_token_type_ids=True)
+
+def encode_items(items: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    pass

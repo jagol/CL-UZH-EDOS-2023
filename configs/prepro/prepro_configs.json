@@ -1,0 +1,359 @@
+[
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023/train_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023/edos_full_train.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_full_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023/dev_internal_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_dev_internal_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023TaskA/dev_task_a_entries_labels.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_dev_official_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023TaskA/test_task_a_entries.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskA",
+        "path_in": "data/EDOS2023/edos_full_test.csv",
+        "path_out": "data/EDOS2023TaskA/TaskA_full_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023/train_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023/edos_full_train.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_full_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023/dev_internal_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_dev_internal_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023TaskB/dev_task_b_entries_labels.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_dev_official_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023TaskB/test_task_b_entries.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskB",
+        "path_in": "data/EDOS2023/edos_full_test.csv",
+        "path_out": "data/EDOS2023TaskB/TaskB_full_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023/train_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023/edos_full_train.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_full_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023/dev_internal_all_tasks_preprocessed.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_dev_internal_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023TaskC/dev_task_c_entries_labels.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_dev_official_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023TaskC/test_task_c_entries.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "EDOS2023TaskC",
+        "path_in": "data/EDOS2023/edos_full_test.csv",
+        "path_out": "data/EDOS2023TaskC/TaskC_full_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+
+    {
+        "corpus": "DGHSD",
+        "path_in": "data/DGHSD/dghsd_train_v0.2.3.csv",
+        "path_out": "data/DGHSD/dghsd_train_v0.2.3_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "DGHSD",
+        "path_in": "data/DGHSD/dghsd_dev_v0.2.3.csv",
+        "path_out": "data/DGHSD/dghsd_dev_v0.2.3_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "DGHSD",
+        "path_in": "data/DGHSD/dghsd_test_v0.2.3.csv",
+        "path_out": "data/DGHSD/dghsd_test_v0.2.3_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+
+    {
+        "corpus": "JigsawUBiTC",
+        "path_in": "data/JigsawUBiTC/JigsawUBiTC_train.csv",
+        "path_out": "data/JigsawUBiTC/JigsawUBiTC_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "JigsawUBiTC",
+        "path_in": "data/JigsawUBiTC/JigsawUBiTC_dev.csv",
+        "path_out": "data/JigsawUBiTC/JigsawUBiTC_dev_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+
+    {
+        "corpus": "MHS",
+        "path_in": "data/MHS/mhs_train.csv",
+        "path_out": "data/MHS/MHS_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "MHS",
+        "path_in": "data/MHS/mhs_dev.csv",
+        "path_out": "data/MHS/MHS_dev_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "MHS",
+        "path_in": "data/MHS/mhs_test.csv",
+        "path_out": "data/MHS/MHS_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+
+    {
+        "corpus": "SBF",
+        "path_in": "data/SBF/SBIC.v2.agg.trn.csv",
+        "path_out": "data/SBF/SBF_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "SBF",
+        "path_in": "data/SBF/SBIC.v2.agg.dev.csv",
+        "path_out": "data/SBF/SBF_dev_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "SBF",
+        "path_in": "data/SBF/SBIC.v2.agg.tst.csv",
+        "path_out": "data/SBF/SBF_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+
+    {
+        "corpus": "TWE",
+        "path_in": "data/TWE/TWE_train.csv",
+        "path_out": "data/TWE/TWE_train_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "TWE",
+        "path_in": "data/TWE/TWE_validation.csv",
+        "path_out": "data/TWE/TWE_dev_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    },
+    {
+        "corpus": "TWE",
+        "path_in": "data/TWE/TWE_test.csv",
+        "path_out": "data/TWE/TWE_test_preprocessed.jsonl",
+        "loader": "CSVLoader",
+        "cleaning_type": "replace",
+        "sanity_check": true,
+        "shuffle": true,
+        "corpus_stats": true,
+        "skip_task_bc_nones": true
+    }
+]

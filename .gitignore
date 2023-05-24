@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# custom
+.vscode/
+configs/full_server_paths/
+logs/
+notebooks/
+
 # IDE
 .idea/*
 src/*.code-workspace
@@ -110,6 +116,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+new_venv/
 ENV/
 env.bak/
 venv.bak/

@@ -36,9 +36,9 @@ def main(args: argparse.Namespace) -> None:
     for key in config:
         if key.startswith('predict'):
             # predict on both devsets
-            RUN_LOGGER.info('Start prediction on internal dev set.')
+            RUN_LOGGER.info('Start prediction.')
             predict.main(argparse.Namespace(**config[key]))
-            RUN_LOGGER.info('Finished prediction on internal dev set.')
+            RUN_LOGGER.info('Finished prediction.')
     
     # ensemble predicting
     for key in config:
@@ -58,9 +58,9 @@ def main(args: argparse.Namespace) -> None:
     # evaluation
     for key in config:
         if key.startswith('evaluate_predictions'):
-            RUN_LOGGER.info('Evaluate predictions on internal dev set.')
+            RUN_LOGGER.info('Evaluate predictions.')
             evaluate_predictions.main(argparse.Namespace(**config[key]))
-            RUN_LOGGER.info('Finished evaluation of predictions on internal dev set.')
+            RUN_LOGGER.info('Finished evaluation of predictions.')
     
     # generation of submission files
     for key in config:

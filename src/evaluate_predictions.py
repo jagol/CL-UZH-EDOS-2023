@@ -205,7 +205,6 @@ def main(args: argparse.Namespace) -> None:
         label_values = load_labels(args.path_labels, args.label_file_label_key)
         for pred_label in preds_labels:
             pred_label[args.label_key] = label_values[pred_label['id']]
-
     if args.evalset_name == 'MHC':
         eval_logger.info('Use method: compute_metrics_hatecheck')
         metrics = compute_metrics_hatecheck(preds_labels, threshold=args.threshold, label_key=args.label_key)
