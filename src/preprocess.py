@@ -100,6 +100,42 @@ class EDOS2023TaskCPreprocessor(Preprocessor):
         self.writer.write(std_entries, self.path_out)
 
 
+# class FullEDOSPreprocessor(Preprocessor):
+#     """
+#     Preprocessor for the final file containing all labels and 
+#     splits provided after the competition ended.
+#     """
+    
+#     def process(self) -> None:
+#         entries = self.loader.load(self.path_in)
+#         std_entries = []
+#         label_name = None
+#         label_type = None
+#         for entry in entries:
+#             if label_name is None:
+#                 if self.corpus_name == 'EDOS2023TaskA':
+#                     label_name = 'label_sexist'
+#                     label_type = 'task_A'
+#                 elif self.corpus_name == 'EDOS2023TaskB':
+#                     label_name = 'label_category'
+#                     label_type = 'task_B'
+#                 elif self.corpus_name == 'EDOS2023TaskC':
+#                     label_name = 'label_vector'
+#                     label_type = 'task_C'
+#                 else:
+#                     raise Exception(f'Unexpected corpus name: {self.corpus_name}')
+#             std_entry = dict(
+#                     id=entry['rewire_id'], 
+#                     text=self.cleaner.clean(entry['text']), 
+#                     label_type=label_type, 
+#                     label_value=LABEL_STR_TO_LABEL_NUM[entry[label_name]], 
+#                     source=self.corpus_name,
+#                     split=entry['split']
+#                 )
+#             std_entries.append(std_entry)
+#         self.writer.write(std_entries, self.path_out)
+
+
 class DGHSDPreprocessor(Preprocessor):
     
     def process(self) -> None:

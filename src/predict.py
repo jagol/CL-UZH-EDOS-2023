@@ -194,7 +194,7 @@ class TaskDescPredictor(Predictor):
         """
         if self._dataset_token:
             encoded_input = Dataset.encode_item_with_label_descriptions_and_dataset_token(
-                self._tokenizer, text=input_text, source=self._dataset_token , label_description=label_description)
+                self._tokenizer, text=input_text, source=self._dataset_token, label_description=label_description)
         else:
             encoded_input = Dataset.encode_item_with_label_descriptions(
                 self._tokenizer, text=input_text, label_description=label_description)
@@ -308,8 +308,8 @@ def main(args) -> None:
     if not os.path.exists(args.path_out_dir):
         os.mkdir(args.path_out_dir)
 
-    if len(os.listdir(args.path_out_dir)) > 0:
-        raise Exception(f'Output directory {args.path_out_dir} is not empty.')
+    # if len(os.listdir(args.path_out_dir)) > 0:
+    #     
 
     pred_logger.info('Load test sets:')
     eval_sets = []
@@ -331,13 +331,19 @@ def main(args) -> None:
         else:
             fname, extension = os.path.splitext(eval_set_fname)
             fname += '.jsonl'
-        fout = open(os.path.join(args.path_out_dir, fname), 'w')
+        fpath_out = os.path.join(args.path_out_dir, fname)
+        if os.path.exists(fpath_out):
+            raise Exception(f'Output file {fpath_out} exists already.')
+        fout = open(fpath_out, 'w')
         pred_logger.info(f'Predict on: {eval_set.name}, fname: {os.path.split(eval_set._path_to_dataset)[1]}')
         for item in tqdm(eval_set):
             if args.label_description and args.predictor == 'TaskDescPredictor':
                 # Only pass label_desc argument for the binary prediction done by TaskDescPredictor.
-                # Other Multi-label predictors that the label descriptions already saved internally.
-                item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
+                # Other Multi-label predictors have the label descriptions already saved internally.
+                try:
+                    item['prediction'] = predictor.classify(input_text=item['text'], label_description=item['label_desc'])
+                except KeyError: 
+                    item['prediction'] = predictor.classify(input_text=item['text'], label_description='sexist')
             else:
                 # do standard classification
                 item['prediction'] = predictor.classify(input_text=item['text'])

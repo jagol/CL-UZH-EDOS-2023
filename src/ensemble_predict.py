@@ -52,13 +52,13 @@ def same_task_model_pred_averaging(preds: List[List[Dict[str, Any]]]) -> List[Di
         for pred in model_preds:
             id_to_preds[pred['id']].append(pred)
     for id, preds in id_to_preds.items():
-        list_of_class_probs = [pred['class_probs'] for pred in preds]
+        list_of_class_probs = [get_class_probs(pred) for pred in preds]
         arr = np.array(list_of_class_probs)
         column_average = np.average(arr, axis=0)
         ensemble_pred = dict(preds[0])
-        ensemble_pred['class_probs'] = column_average.tolist()
-        if 'prediction' in ensemble_pred:
-            del ensemble_pred['prediction']
+        ensemble_pred['prediction'] = column_average.tolist()
+        # if 'prediction' in ensemble_pred:
+        #     del ensemble_pred['prediction']
         if 'prediction_int' in ensemble_pred:
             del ensemble_pred['prediction_int']
         if 'prediction_int_binary' in ensemble_pred:

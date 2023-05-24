@@ -29,6 +29,10 @@ class Dataset(torch.utils.data.IterableDataset):
 
     def __iter__(self) -> None:
         for item in self._items:
+            if 'label_value' in item and item['label_value'] == -1:
+                import pdb; pdb.set_trace()
+            if 'labels' in item and item['labels'] == -1:
+                import pdb; pdb.set_trace()
             if 'input_ids' in item:
                 if isinstance('input_ids', torch.Tensor):    
                     try:
@@ -62,8 +66,11 @@ class Dataset(torch.utils.data.IterableDataset):
                         if d[filter_key] == filter_value:
                             continue
                         else:
-                            d[filter_key] = d[filter_key] - 1
+                            pass
+                            # d[filter_key] = d[filter_key] - 1
                     self._items.append(d)
+                    if d['label_value'] == -1:
+                        import pdb; pdb.set_trace()
                     if load_limit:
                         if i >= load_limit:
                             ds_logger.info(f'Stop dataset loading due to load_limit at {load_limit} items.')
@@ -79,7 +86,7 @@ class Dataset(torch.utils.data.IterableDataset):
                         else:
                             d[filter_key] = d[filter_key] - 1
                     self._items.append(row)
-        
+
 
     def add_hypotheses(self, hypothesis: str, augmentation: bool = False) -> None:
         """Add hypotheses and do hypothesis-augmentation."""

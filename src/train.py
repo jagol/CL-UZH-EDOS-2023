@@ -3,32 +3,31 @@ import json
 import os
 import random
 from typing import Optional, Dict, List, Any, Union, NewType
+from collections import defaultdict
+from statistics import mean, median
 
 import numpy as np
 import sklearn
 import torch
+torch.backends.cuda.matmul.allow_tf32 = True
 from transformers import (
     AutoModelForSequenceClassification,
     TrainingArguments, Trainer, AutoTokenizer, 
     EarlyStoppingCallback, DataCollator,
     AutoModelForSequenceClassification, AutoTokenizer
 )
-from transformers import default_data_collator
-from transformers.data.data_collator import DataCollatorMixin
-from transformers.tokenization_utils_base import BatchEncoding
 import wandb
 
 from dataclasses import dataclass
 from dataset import Dataset
 from get_loggers import get_logger
 from to_label_desc_format import batch_to_label_desc
-from dataset import encode_items
 
 
 # transformers.logging.set_verbosity_info()
 TRAIN_LOGGER = None
 TOKENIZER = None
-MAX_SEQ_LENGTH = 512
+MAX_SEQ_LENGTH = 128
 DATASET_TOKEN = None
 if TRAIN_LOGGER is None:
     TRAIN_LOGGER = get_logger('train')
@@ -75,6 +74,8 @@ def label_desc_datacollator(features: List[InputDataClass]) -> Dict[str, torch.T
     label_types = [d['input_ids']['label_type'] for d in features]
     label_values = [d['input_ids']['label_value'] for d in features]
     sources = [d['input_ids']['source'] for d in features]
+    if -1 in label_values:
+        import pdb; pdb.set_trace()
     binary_labels, label_descs = batch_to_label_desc(sources, label_types, label_values)
     if DATASET_TOKEN:
         ds_label_descs = []
@@ -94,6 +95,39 @@ def label_desc_datacollator(features: List[InputDataClass]) -> Dict[str, torch.T
     return enc_batch
 
 
+# adjusted from: https://huggingface.co/transformers/v4.8.0/_modules/transformers/data/data_collator.html
+InputDataClass = NewType("InputDataClass", Any)
+def vanilla_datacollator(features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
+    """
+    Very simple data collator that simply collates batches of dict-like objects and performs special handling for
+    potential keys named:
+
+        - ``label``: handles a single value (int or float) per object
+        - ``label_ids``: handles a list of values per object
+
+    Does not do any additional preprocessing: property names of the input object will be used as corresponding inputs
+    to the model. See glue and ner for example of how it's useful.
+    """
+    texts = [d['input_ids']['text'] for d in features]
+    label_values = [d['input_ids']['label_value'] for d in features]
+    sources = [d['input_ids']['source'] for d in features]
+    if DATASET_TOKEN:
+        ds_texts = []
+        for source, text in zip(sources, texts):
+            ds_texts.append(f'[{source}] {texts}')
+    else:
+        ds_texts = texts
+    enc_batch = TOKENIZER(
+        text=ds_texts,
+        padding='longest',
+        max_length=MAX_SEQ_LENGTH, 
+        pad_to_multiple_of=2, 
+        return_tensors='pt'
+    )
+    enc_batch['labels'] = torch.LongTensor(label_values)
+    return enc_batch
+
+
 def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClassification,
           tokenizer: AutoTokenizer, args: argparse.Namespace) -> None:
     TRAIN_LOGGER.info('Instantiate training args.')
@@ -107,7 +141,6 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         logging_steps=args.log_interval,
         save_strategy=args.save_strategy,
         # debugging settings:
-        # save_strategy='steps',
         save_steps=args.save_steps,
         learning_rate=args.learning_rate,
         evaluation_strategy=args.evaluation_strategy,
@@ -115,15 +148,17 @@ def train(train_set: Dataset, dev_set: Dataset, model: AutoModelForSequenceClass
         eval_accumulation_steps=args.eval_accumulation_steps,
         load_best_model_at_end=True,
         metric_for_best_model='eval_f1-macro',
-        report_to="wandb" if args.wandb else None,
+        report_to='wandb' if args.wandb else None,
         no_cuda=args.no_cuda,
+        # tf32=True,
+        # bf16=True
     )
     TRAIN_LOGGER.info('Instantiate trainer.')
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
         args=training_args,
-        data_collator=label_desc_datacollator if args.label_desc_datacollator else default_data_collator,
+        data_collator=label_desc_datacollator if args.label_desc_datacollator else vanilla_datacollator,
         train_dataset=train_set,
         eval_dataset=dev_set,
         compute_metrics=compute_metrics,
@@ -230,15 +265,50 @@ def main(args: argparse.Namespace) -> None:
     TRAIN_LOGGER.info(f'Load trainset from: {args.training_set}')
     train_set = Dataset(name='trainset', path_to_dataset=args.training_set)
     train_set.load(load_limit=args.limit_training_set, filter_key=args.filter_key, filter_value=args.filter_value)
-    # train_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
-    #                          label_description=args.label_description)
-    # ensure_valid_encoding(train_set)
+    # lengths = []
+    # item_num_to_length = {}
+    # for i, item in enumerate(train_set):
+    #     text = item['input_ids']['text']
+    #     label_type = item['input_ids']['label_type']
+    #     label_value = item['input_ids']['label_value']
+    #     source = item['input_ids']['source']
+    #     binary_labels, label_descs = batch_to_label_desc([source], [label_type], [label_value])
+    #     if DATASET_TOKEN:
+    #         ds_label_descs = []
+    #         for s, ld in zip([source], [label_descs]):
+    #             ds_label_descs.append(f'[{s}] {ld}')
+    #     else:
+    #         ds_label_descs = label_descs
+    #     enc_batch = TOKENIZER(
+    #         text=ds_label_descs[0], 
+    #         text_pair=text,
+    #         padding=True,
+    #         truncation=True,
+    #         max_length=MAX_SEQ_LENGTH, 
+    #         pad_to_multiple_of=2, 
+    #         return_tensors='pt'
+    #     )
+    #     length = len(enc_batch['input_ids'][0])
+    #     lengths.append(length)
+    #     item_num_to_length[i] = length
+    # length_to_item_num = defaultdict(list)
+    # for item_num in item_num_to_length:
+    #     length_to_item_num[item_num_to_length[item_num]].append(item_num)
+    # sorted_lengths = sorted(lengths)
+    # print(f'20 longest sequences: {sorted_lengths[-20:]}')
+    # print(f'20 shortest sequences: {sorted_lengths[:20]}')
+    # print(f'Average sequence length: {mean(lengths)}')
+    # print(f'Median sequence length: {median(lengths)}')
 
     TRAIN_LOGGER.info(f'Load trainset from: {args.validation_set}')
     eval_set = Dataset(name='eval_set', path_to_dataset=args.validation_set)
     eval_set.load(load_limit=args.limit_validation_set, filter_key=args.filter_key, filter_value=args.filter_value)
-    # eval_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
-    #                         label_description=args.label_description)
+    # if not args.label_desc_datacollator:
+    #     train_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
+    #                             label_description=args.label_description)
+    #     # ensure_valid_encoding(train_set)
+    #     eval_set.encode_dataset(tokenizer=TOKENIZER, dataset_token=args.dataset_token,
+    #                             label_description=args.label_description)
 
     model_to_load = args.checkpoint if args.checkpoint else args.model_name
     TRAIN_LOGGER.info(f'Load Model from: {model_to_load}')

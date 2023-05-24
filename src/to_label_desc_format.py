@@ -68,8 +68,16 @@ def batch_to_label_desc(sources: List[str], label_types: List[str], label_values
 
 
 def to_label_desc(source: str, label_type: str, label_value: str) -> Tuple[int, str]:
-    if len(GLOBAL_LABEL_MAPPING[source][label_type]) <= 2:
-        return label_value, GLOBAL_LABEL_MAPPING[source][label_type][label_value]
+    try:
+        if len(GLOBAL_LABEL_MAPPING[source][label_type]) <= 2:
+            if label_value == 0:
+                # negative binary label values have no label description
+                # just return a negative label value with the positive description 
+                return label_value, list(GLOBAL_LABEL_MAPPING[source][label_type].values())[0]
+            else:
+                return label_value, GLOBAL_LABEL_MAPPING[source][label_type][label_value]
+    except:
+        import pdb; pdb.set_trace()
     # if there are more than 2 classes decide randomly if pos or neg example
     if choice([True, False]):
         # create a positive example

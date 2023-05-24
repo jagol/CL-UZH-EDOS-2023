@@ -124,6 +124,9 @@ GLOBAL_LABEL_MAPPING = {
         }
     },
     'MHS': {
+        'hate speech': {
+            1: 'hate speech'
+        },
         'targets gender': {
             1: 'targets gender'
         },
@@ -132,6 +135,9 @@ GLOBAL_LABEL_MAPPING = {
         }
     },
     'TWE': {
+        'offensive': {
+            1: 'offensive'
+        },
         'hate': {
             1: 'hate'
         },
