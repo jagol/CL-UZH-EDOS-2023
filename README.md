@@ -1,6 +1,6 @@
 # CL-UZH-EDOS-2023
 
-This repository contains the code to reproduce the results of the paper _CL-UZH@EDOS2023: Incremental Fine-Tuning and Multi-Task Learning with Label Descriptions_.
+This repository contains the code to reproduce the results of the paper [CL-UZH@EDOS2023: Incremental Fine-Tuning and Multi-Task Learning with Label Descriptions](https://arxiv.org/abs/2306.03907).
 
 ## Run Experiments
 
