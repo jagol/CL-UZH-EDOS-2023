@@ -24,4 +24,4 @@ for split in splits:
         else:
             all_datasets = pd.concat([all_datasets, train_set])
 
-    all_datasets.to_csv(f'/srv/scratch0/jgoldz/CL-UZH-EDOS-2023/data/TWE/TWE_{split}.csv')
+    all_datasets.to_csv(f'CL-UZH-EDOS-2023/data/TWE/TWE_{split}.csv')

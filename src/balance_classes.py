@@ -279,5 +279,3 @@ if __name__ == '__main__':
     parser.add_argument('-l', '--label_types', nargs='+', help='Specify which label types should be balanced.')
     cmd_args = parser.parse_args()
     main(cmd_args)
-
-# python3 src/balance_classes.py -i /srv/scratch0/jgoldz/HASOC2022/data/main/no_cleaning/main_train_mtl_HASOC2019_HASOC2020_RP_GermEval2018_DeTox_Bretschneider_Foreigners_SBF_JigsawUBiTC_50000.jsonl -o /srv/scratch0/jgoldz/HASOC2022/data/main/no_cleaning/main_train_mtl_balanced_downsampled_30_70_HASOC2019_HASOC2020_RP_GermEval2018_DeTox_Bretschneider_Foreigners_SBF_JigsawUBiTC_50000.jsonl -m downsample_to_30_70 -c HASOC2019 HASOC2020 RP GermEval2018 DeTox Bretschneider_Foreigners JigsawUBiTC SBF

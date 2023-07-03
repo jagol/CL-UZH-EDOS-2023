@@ -12,4 +12,4 @@ df['target_women'] = df['target_gender_transgender_women'] + df['target_gender_w
 
 df_new = df[['comment_id', 'text', 'hatespeech', 'sentiment', 'respect', 'insult', 'humiliate', 'status', 'dehumanize', 'violence', 'genocide', 'target_gender', 'target_women']]
 
-df_new.to_csv('/srv/scratch0/jgoldz/CL-UZH-EDOS-2023/data/MHS/mhs_relevant_columns.csv')
+df_new.to_csv('CL-UZH-EDOS-2023/data/MHS/mhs_relevant_columns.csv')
